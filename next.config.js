@@ -14,6 +14,15 @@ const nextConfig = {
       },
     ],
   },
+
+  webpack: (config) => {
+    config.output.module = true;
+    return config;
+  },
+
+  experimental: {
+    esmExternals: 'loose',
+  },
 };
 
 module.exports = nextConfig;
