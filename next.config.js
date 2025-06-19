@@ -28,17 +28,26 @@ const nextConfig = {
         tls: false,
       };
 
-      // 更簡單的方法：排除 HeartbeatWorker 相關檔案
+      // 禁用 Terser 對特定檔案的處理
       if (config.optimization && config.optimization.minimizer) {
-        config.optimization.minimizer.forEach((plugin) => {
-          if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
-            plugin.options.exclude = [
-              /HeartbeatWorker/,
-              /static\/media\/HeartbeatWorker/,
-              /coinbase.*wallet.*sdk.*HeartbeatWorker/,
-            ];
+        config.optimization.minimizer = config.optimization.minimizer.filter(
+          plugin => {
+            if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
+              // 檢查檔案路徑，如果是 HeartbeatWorker 相關檔案則跳過
+              const originalTest = plugin.options.test;
+              plugin.options.test = (module) => {
+                if (module.resource && module.resource.includes('HeartbeatWorker')) {
+                  return false;
+                }
+                if (originalTest) {
+                  return originalTest(module);
+                }
+                return true;
+              };
+            }
+            return true;
           }
-        });
+        );
       }
     }
     
