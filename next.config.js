@@ -17,49 +17,6 @@ const nextConfig = {
 
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // 更激進的方法：完全禁用 Terser 對特定檔案的處理
-      if (config.optimization && Array.isArray(config.optimization.minimizer)) {
-        const originalMinimizers = config.optimization.minimizer;
-        config.optimization.minimizer = [];
-        
-        originalMinimizers.forEach((plugin) => {
-          if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
-            // 創建新的 Terser 實例，排除問題檔案
-            const TerserPlugin = plugin.constructor;
-            config.optimization.minimizer.push(
-              new TerserPlugin({
-                ...plugin.options,
-                exclude: [
-                  /HeartbeatWorker/,
-                  /static\/media\/HeartbeatWorker/,
-                  /coinbase.*wallet.*sdk.*HeartbeatWorker/,
-                ],
-                terserOptions: {
-                  ...plugin.options.terserOptions,
-                  ecma: 2020,
-                  module: true,
-                  parse: {
-                    ecma: 2020,
-                  },
-                  compress: {
-                    module: true,
-                    ecma: 2020,
-                  },
-                  mangle: {
-                    module: true,
-                  },
-                  format: {
-                    ecma: 2020,
-                  },
-                },
-              })
-            );
-          } else {
-            config.optimization.minimizer.push(plugin);
-          }
-        });
-      }
-
       // 設定 Web Workers 全域物件
       config.output.globalObject = 'self';
       
@@ -70,6 +27,19 @@ const nextConfig = {
         net: false,
         tls: false,
       };
+
+      // 更簡單的方法：排除 HeartbeatWorker 相關檔案
+      if (config.optimization && config.optimization.minimizer) {
+        config.optimization.minimizer.forEach((plugin) => {
+          if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
+            plugin.options.exclude = [
+              /HeartbeatWorker/,
+              /static\/media\/HeartbeatWorker/,
+              /coinbase.*wallet.*sdk.*HeartbeatWorker/,
+            ];
+          }
+        });
+      }
     }
     
     return config;
