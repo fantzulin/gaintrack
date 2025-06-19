@@ -27,6 +27,13 @@ const nextConfig = {
         net: false,
         tls: false,
       };
+
+      // 完全禁用 Terser 壓縮
+      if (config.optimization && config.optimization.minimizer) {
+        config.optimization.minimizer = config.optimization.minimizer.filter(
+          plugin => plugin.constructor.name !== 'TerserPlugin'
+        );
+      }
     }
     
     return config;
