@@ -17,30 +17,46 @@ const nextConfig = {
 
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // 處理 Terser 配置
+      // 更激進的方法：完全禁用 Terser 對特定檔案的處理
       if (config.optimization && Array.isArray(config.optimization.minimizer)) {
-        config.optimization.minimizer = config.optimization.minimizer.map((plugin) => {
+        const originalMinimizers = config.optimization.minimizer;
+        config.optimization.minimizer = [];
+        
+        originalMinimizers.forEach((plugin) => {
           if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
-            // 更新 Terser 選項以支援模組語法
-            plugin.options = {
-              ...plugin.options,
-              exclude: /HeartbeatWorker/,
-              terserOptions: {
-                ...plugin.options.terserOptions,
-                module: true,
-                parse: {
+            // 創建新的 Terser 實例，排除問題檔案
+            const TerserPlugin = plugin.constructor;
+            config.optimization.minimizer.push(
+              new TerserPlugin({
+                ...plugin.options,
+                exclude: [
+                  /HeartbeatWorker/,
+                  /static\/media\/HeartbeatWorker/,
+                  /coinbase.*wallet.*sdk.*HeartbeatWorker/,
+                ],
+                terserOptions: {
+                  ...plugin.options.terserOptions,
                   ecma: 2020,
-                },
-                compress: {
                   module: true,
+                  parse: {
+                    ecma: 2020,
+                  },
+                  compress: {
+                    module: true,
+                    ecma: 2020,
+                  },
+                  mangle: {
+                    module: true,
+                  },
+                  format: {
+                    ecma: 2020,
+                  },
                 },
-                mangle: {
-                  module: true,
-                },
-              },
-            };
+              })
+            );
+          } else {
+            config.optimization.minimizer.push(plugin);
           }
-          return plugin;
         });
       }
 
