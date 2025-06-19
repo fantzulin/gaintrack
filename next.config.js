@@ -28,26 +28,32 @@ const nextConfig = {
         tls: false,
       };
 
-      // 禁用 Terser 對特定檔案的處理
+      // 完全禁用 Terser 的模組模式
       if (config.optimization && config.optimization.minimizer) {
-        config.optimization.minimizer = config.optimization.minimizer.filter(
-          plugin => {
-            if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
-              // 檢查檔案路徑，如果是 HeartbeatWorker 相關檔案則跳過
-              const originalTest = plugin.options.test;
-              plugin.options.test = (module) => {
-                if (module.resource && module.resource.includes('HeartbeatWorker')) {
-                  return false;
-                }
-                if (originalTest) {
-                  return originalTest(module);
-                }
-                return true;
-              };
-            }
-            return true;
+        config.optimization.minimizer.forEach((plugin) => {
+          if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
+            plugin.options.terserOptions = {
+              ...plugin.options.terserOptions,
+              module: false,
+              parse: {
+                ...plugin.options.terserOptions?.parse,
+                ecma: 2020,
+              },
+              compress: {
+                ...plugin.options.terserOptions?.compress,
+                module: false,
+              },
+              mangle: {
+                ...plugin.options.terserOptions?.mangle,
+                module: false,
+              },
+              format: {
+                ...plugin.options.terserOptions?.format,
+                ecma: 2020,
+              },
+            };
           }
-        );
+        });
       }
     }
     
