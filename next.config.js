@@ -28,12 +28,11 @@ const nextConfig = {
         tls: false,
       };
 
-      // 完全禁用 Terser 壓縮
-      if (config.optimization && config.optimization.minimizer) {
-        config.optimization.minimizer = config.optimization.minimizer.filter(
-          plugin => plugin.constructor.name !== 'TerserPlugin'
-        );
-      }
+      // 完全排除 Coinbase Wallet SDK
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '@coinbase/wallet-sdk': false,
+      };
     }
     
     return config;
