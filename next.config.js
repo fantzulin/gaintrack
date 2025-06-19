@@ -27,34 +27,6 @@ const nextConfig = {
         net: false,
         tls: false,
       };
-
-      // 完全禁用 Terser 的模組模式
-      if (config.optimization && config.optimization.minimizer) {
-        config.optimization.minimizer.forEach((plugin) => {
-          if (plugin.constructor && plugin.constructor.name === 'TerserPlugin') {
-            plugin.options.terserOptions = {
-              ...plugin.options.terserOptions,
-              module: false,
-              parse: {
-                ...plugin.options.terserOptions?.parse,
-                ecma: 2020,
-              },
-              compress: {
-                ...plugin.options.terserOptions?.compress,
-                module: false,
-              },
-              mangle: {
-                ...plugin.options.terserOptions?.mangle,
-                module: false,
-              },
-              format: {
-                ...plugin.options.terserOptions?.format,
-                ecma: 2020,
-              },
-            };
-          }
-        });
-      }
     }
     
     return config;
