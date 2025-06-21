@@ -1,10 +1,6 @@
 import { connectorsForWallets } from '@rainbow-me/rainbowkit';
 import { createConfig, http } from 'wagmi';
-import {
-  mainnet,
-  arbitrum,
-  arbitrumSepolia,
-} from 'viem/chains';
+import { mainnet, arbitrum } from 'viem/chains';
 import {
   metaMaskWallet,
   walletConnectWallet,
@@ -17,7 +13,6 @@ import {
 const chains = [
   mainnet,
   arbitrum,
-  arbitrumSepolia,
 ] as const;
 
 // 手動指定連接器，排除 Coinbase Wallet
@@ -47,6 +42,5 @@ export const config = createConfig({
   transports: {
     [mainnet.id]: http(),
     [arbitrum.id]: http(),
-    [arbitrumSepolia.id]: http(),
   },
 }); 

@@ -82,8 +82,6 @@ export default function DeFiPage() {
     );
   }
 
-  console.log('compoundData:', compoundData);
-
   return (
     <div className="container mx-auto py-10">
       <div className="flex justify-between items-center mb-8">
@@ -157,14 +155,14 @@ export default function DeFiPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Supply APY</span>
+                      <div className="grid sm:flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Supply APY</span>
                         <span className="text-lg font-bold text-green-500">
                           {asset.supplyAPY.toFixed(2)}%
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Borrow APY</span>
+                      <div className="grid sm:flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Borrow APY</span>
                         <span className="text-lg font-bold text-red-500">
                           {asset.borrowAPY.toFixed(2)}%
                         </span>
@@ -214,14 +212,14 @@ export default function DeFiPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Supply APY</span>
+                      <div className="grid sm:flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Supply APY</span>
                         <span className="text-lg font-bold text-green-500">
                           {asset.supplyAPY.toFixed(2)}%
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-muted-foreground">Borrow APY</span>
+                      <div className="grid sm:flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Borrow APY</span>
                         <span className="text-lg font-bold text-red-500">
                           {asset.borrowAPY.toFixed(2)}%
                         </span>
