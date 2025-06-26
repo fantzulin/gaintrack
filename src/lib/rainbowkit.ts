@@ -39,6 +39,7 @@ const connectors = connectorsForWallets(
 export const config = createConfig({
   connectors,
   chains,
+  ssr: false,
   transports: {
     [mainnet.id]: http(),
     [arbitrum.id]: http(),

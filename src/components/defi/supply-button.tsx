@@ -1,0 +1,306 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { parseUnits, formatUnits } from "viem";
+import { toast } from "sonner";
+
+interface SupplyButtonProps {
+  protocol: "aave" | "compound";
+  tokenSymbol: string;
+  tokenAddress: string;
+  marketAddress: string;
+  currentAPY: number;
+}
+
+// ERC20 ABI for approve function and allowance
+const ERC20_ABI = [
+  {
+    name: "approve",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" }
+    ],
+    outputs: [{ name: "", type: "bool" }]
+  },
+  {
+    name: "allowance",
+    type: "function",
+    stateMutability: "view",
+    inputs: [
+      { name: "owner", type: "address" },
+      { name: "spender", type: "address" }
+    ],
+    outputs: [{ name: "", type: "uint256" }]
+  }
+] as const;
+
+// Aave V3 Pool ABI for supply function
+const AAVE_POOL_ABI = [
+  {
+    name: "supply",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "asset", type: "address" },
+      { name: "amount", type: "uint256" },
+      { name: "onBehalfOf", type: "address" },
+      { name: "referralCode", type: "uint16" }
+    ],
+    outputs: []
+  }
+] as const;
+
+// Compound V3 Comet ABI for supply function
+const COMPOUND_COMET_ABI = [
+  {
+    name: "supply",
+    type: "function",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "asset", type: "address" },
+      { name: "amount", type: "uint256" }
+    ],
+    outputs: []
+  }
+] as const;
+
+export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY }: SupplyButtonProps) {
+  const { address, isConnected } = useAccount();
+  const [amount, setAmount] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [step, setStep] = useState<"approve" | "supply" | "complete">("approve");
+
+  // Read current allowance
+  const { data: currentAllowance, isLoading: isAllowanceLoading, error: allowanceError } = useReadContract({
+    address: tokenAddress as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "allowance",
+    args: [address as `0x${string}`, marketAddress as `0x${string}`],
+    query: {
+      enabled: !!address && !!tokenAddress && !!marketAddress,
+    },
+  });
+
+  // Debug information
+  console.log("Allowance Debug:", {
+    tokenAddress,
+    marketAddress,
+    userAddress: address,
+    currentAllowance: currentAllowance?.toString(),
+    allowanceError,
+    isAllowanceLoading
+  });
+
+  // Single write contract hook for all transactions
+  const { 
+    data: hash, 
+    writeContract,
+    isPending,
+    error 
+  } = useWriteContract();
+
+  // Wait for transaction receipt
+  const { isLoading: isConfirming } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  const handleApprove = async () => {
+    if (!isConnected || !address || !amount) {
+      toast.error("Please connect wallet and enter amount");
+      return;
+    }
+
+    const numAmount = parseFloat(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    try {
+      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+      
+      // Check if current allowance is sufficient
+      if (currentAllowance && currentAllowance >= amountWei) {
+        toast.success("Allowance is sufficient, proceeding to supply");
+        setStep("supply");
+        return;
+      }
+
+      writeContract({
+        address: tokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "approve",
+        args: [marketAddress as `0x${string}`, amountWei],
+      });
+
+      toast.success("Approval transaction initiated!");
+    } catch (error) {
+      console.error("Approve error:", error);
+      toast.error("Failed to approve tokens");
+    }
+  };
+
+  const handleSupply = async () => {
+    if (!isConnected || !address || !amount) {
+      toast.error("Please connect wallet and enter amount");
+      return;
+    }
+
+    try {
+      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+      
+      if (protocol === "aave") {
+        writeContract({
+          address: marketAddress as `0x${string}`,
+          abi: AAVE_POOL_ABI,
+          functionName: "supply",
+          args: [tokenAddress as `0x${string}`, amountWei, address, 0], // referralCode = 0
+        });
+      } else if (protocol === "compound") {
+        writeContract({
+          address: marketAddress as `0x${string}`,
+          abi: COMPOUND_COMET_ABI,
+          functionName: "supply",
+          args: [tokenAddress as `0x${string}`, amountWei],
+        });
+      }
+
+      toast.success(`Supply ${amount} ${tokenSymbol} to ${protocol.toUpperCase()} initiated!`);
+    } catch (error) {
+      console.error("Supply error:", error);
+      toast.error("Failed to supply tokens");
+    }
+  };
+
+  // Handle transaction completion - improved logic
+  useEffect(() => {
+    if (hash && !isConfirming) {
+      if (step === "approve") {
+        setStep("supply");
+        toast.success("Approval completed! Please proceed with supply.");
+      } else if (step === "supply") {
+        setStep("complete");
+        toast.success("Supply completed successfully!");
+      }
+    }
+  }, [hash, isConfirming, step]);
+
+  const isProcessing = isPending || isConfirming;
+
+  // Format current allowance for display
+  const formattedAllowance = currentAllowance ? formatUnits(currentAllowance, 6) : "0";
+  const needsApproval = amount && currentAllowance ? parseUnits(amount, 6) > currentAllowance : true;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          variant="outline" 
+          size="sm"
+          disabled={!isConnected}
+          className="ml-auto"
+        >
+          Supply {tokenSymbol}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Supply {tokenSymbol} to {protocol.toUpperCase()}</DialogTitle>
+          <DialogDescription>
+            Supply your {tokenSymbol} to earn {currentAPY.toFixed(2)}% APY
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="amount" className="text-right">
+              Amount
+            </Label>
+            <Input
+              id="amount"
+              type="number"
+              placeholder="0.00"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="col-span-3"
+              disabled={isProcessing}
+            />
+          </div>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>Protocol: {protocol.toUpperCase()}</p>
+            <p>APY: {currentAPY.toFixed(2)}%</p>
+            <p>Token: {tokenSymbol}</p>
+            {!isAllowanceLoading && (
+              <p>Current Allowance: {formattedAllowance} {tokenSymbol}</p>
+            )}
+            {amount && !needsApproval && (
+              <p className="text-green-600">✓ Allowance sufficient, no approval needed</p>
+            )}
+            {amount && needsApproval && currentAllowance && (
+              <p className="text-orange-600">⚠ Approval needed for {amount} {tokenSymbol}</p>
+            )}
+            {error && (
+              <div className="text-red-500 mt-2 sm:max-w-[375px]">
+                <pre className="overflow-hidden text-ellipsis">{error.message}</pre>
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => {
+                    navigator.clipboard.writeText(error.message);
+                    toast.success("Error copied to clipboard");
+                  }}
+                >
+                  Copy Error
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <DialogFooter>
+          {step === "approve" && (
+            <Button 
+              onClick={handleApprove} 
+              disabled={isProcessing || !amount}
+            >
+              {isProcessing ? "Processing..." : needsApproval ? `Approve ${tokenSymbol}` : `Supply ${tokenSymbol}`}
+            </Button>
+          )}
+          {step === "supply" && (
+            <Button 
+              onClick={handleSupply} 
+              disabled={isProcessing}
+            >
+              {isProcessing ? "Supplying..." : `Supply ${tokenSymbol}`}
+            </Button>
+          )}
+          {step === "complete" && (
+            <Button 
+              onClick={() => {
+                setIsOpen(false);
+                setAmount("");
+                setStep("approve");
+              }}
+            >
+              Close
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+} 

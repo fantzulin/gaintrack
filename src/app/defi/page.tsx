@@ -244,6 +244,7 @@ export default function DeFiPage() {
           <EarningsPredictor 
             currentAPY={selectedAPY} 
             selectedToken={selectedToken}
+            selectedProtocol={selectedProtocol}
           />
         </div>
       </div>

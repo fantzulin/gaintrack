@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useWalletAssets } from "@/hooks/useWalletAssets";
+import { SupplyButton } from "./supply-button";
 import Image from "next/image";
 
 interface EarningsPredictorProps {
   currentAPY: number;
   selectedToken: string;
+  selectedProtocol: string;
 }
 
 interface ProjectedData {
@@ -23,7 +25,27 @@ const STABLE_COINS = [
   { symbol: "DAI", color: "#F5AC37" },
 ];
 
-export function EarningsPredictor({ currentAPY, selectedToken }: EarningsPredictorProps) {
+// Token addresses and market addresses
+const TOKEN_ADDRESSES = {
+  USDC: "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+  USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
+  DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+} as const;
+
+const MARKET_ADDRESSES = {
+  aave: {
+    USDC: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+    USDT: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+    DAI: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+  },
+  compound: {
+    USDC: "0x9c4ec768c28520b50860ea7a15bd7213a9ff58bf",
+    USDT: "0xd98be00b5d27fc98112bde293e487f8d4ca57d07",
+    DAI: "0x9c4ec768c28520b50860ea7a15bd7213a9ff58bf",
+  },
+} as const;
+
+export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol }: EarningsPredictorProps) {
   const { assets, isLoading } = useWalletAssets();
   const [projectedData, setProjectedData] = useState<ProjectedData[]>([]);
 
@@ -70,10 +92,10 @@ export function EarningsPredictor({ currentAPY, selectedToken }: EarningsPredict
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>收益預測模組</CardTitle>
+          <CardTitle>Earnings Predictor</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-8">載入中...</div>
+          <div className="text-center py-8">loading...</div>
         </CardContent>
       </Card>
     );
@@ -89,17 +111,28 @@ export function EarningsPredictor({ currentAPY, selectedToken }: EarningsPredict
           {selectedToken && (
             <div className="space-y-2">
               <Label>{selectedToken} Balance</Label>
-              <div className="flex items-center space-x-2 p-4 bg-muted rounded-lg">
-                {selectedAsset?.logo && (
-                  <Image
-                    src={selectedAsset.logo}
-                    alt={selectedToken}
-                    width={24}
-                    height={24}
-                    className="rounded-full"
+              <div className="flex items-center justify-between space-x-2">
+                <div className="flex items-center  space-x-2 p-4 bg-muted rounded-lg">
+                  {selectedAsset?.logo && (
+                    <Image
+                      src={selectedAsset.logo}
+                      alt={selectedToken}
+                      width={24}
+                      height={24}
+                      className="rounded-full"
+                    />
+                  )}
+                  <span className="text-2xl font-bold">${balance.toLocaleString()}</span>
+                </div>
+                {selectedProtocol && selectedToken && (
+                  <SupplyButton
+                    protocol={selectedProtocol as "aave" | "compound"}
+                    tokenSymbol={selectedToken}
+                    tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                    marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                    currentAPY={currentAPY}
                   />
                 )}
-                <span className="text-2xl font-bold">${balance.toLocaleString()}</span>
               </div>
               {currentAPY > 0 && (
                 <div className="grid grid-cols-2 gap-4 mt-4">
