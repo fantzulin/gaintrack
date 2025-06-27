@@ -19,14 +19,16 @@ import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { useWalletAssets } from "@/hooks/useWalletAssets";
+import { useWalletDeFi } from "@/hooks/useWalletAssets";
+import { useCompoundPositions } from "@/hooks/useCompoundPositions";
 import { useAaveSupplyData } from "@/components/defi/aave-supply";
 import { useCompoundSupplyData } from "@/components/defi/compound-supply";
 import { EarningsPredictor } from "@/components/defi/earnings-predictor";
 
 export default function DeFiPage() {
   const { isConnected } = useAccount();
-  const { assets, isLoading, error } = useWalletAssets();
+  const { defi, isLoading, error } = useWalletDeFi();
+  const { compoundPositions, isLoading: isCompoundPositionsLoading, error: compoundPositionsError } = useCompoundPositions();
   const { supplyData: aaveData, isLoading: isAaveLoading, error: aaveError } = useAaveSupplyData();
   const { supplyData: compoundData, isLoading: isCompoundLoading, error: compoundError } = useCompoundSupplyData();
   const [mounted, setMounted] = useState(false);
@@ -36,7 +38,7 @@ export default function DeFiPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+  }, [defi, compoundPositions]);
 
   if (!mounted) {
     return (
@@ -61,7 +63,7 @@ export default function DeFiPage() {
     );
   }
 
-  if (isLoading || isAaveLoading || isCompoundLoading) {
+  if (isLoading || isCompoundPositionsLoading || isAaveLoading || isCompoundLoading) {
     return (
       <div className="container mx-auto py-10">
         <div className="text-center">
@@ -71,12 +73,12 @@ export default function DeFiPage() {
     );
   }
 
-  if (aaveError || compoundError) {
+  if (aaveError || compoundError || compoundPositionsError) {
     return (
       <div className="container mx-auto py-10">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Error</h1>
-          <p className="text-red-500">{aaveError || compoundError}</p>
+          <p className="text-red-500">{aaveError || compoundError || compoundPositionsError}</p>
         </div>
       </div>
     );
@@ -92,36 +94,47 @@ export default function DeFiPage() {
       </div>
 
       <div className="space-y-8">
-        {/* <Table>
+        <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Protocol</TableHead>
-              <TableHead>Position</TableHead>
-              <TableHead className="text-right">APY</TableHead>
+              <TableHead>Total Value</TableHead>
+              <TableHead className="text-right">Net APY</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {assets.length === 0 ? (
+            {defi.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   No DeFi positions found
                 </TableCell>
               </TableRow>
             ) : (
-              assets.filter(asset => asset.usdValue && Number(asset.usdValue.toFixed(2)) > 1)
-                .map((position, index) => (
+              [...defi, ...compoundPositions]
+                .filter(protocol => protocol.position.balanceUsd > 0)
+                .map((protocol, index) => (
                   <TableRow key={index}>
                     <TableCell className="flex items-center">
-                      <Image src={position.logo} alt={position.symbol} width={20} height={20} />
-                      <span className="ml-2">{position.symbol}</span>
+                      <Image 
+                        src={protocol.protocolLogo} 
+                        alt={protocol.protocolName} 
+                        width={20} 
+                        height={20} 
+                        className="rounded-full"
+                      />
+                      <span className="ml-2">{protocol.protocolName}</span>
                     </TableCell>
-                    <TableCell>${position.usdValue.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{}%</TableCell>
+                    <TableCell>
+                      {protocol.position?.balanceUsd ? `$${protocol.position.balanceUsd.toFixed(2)}` : '$0.00'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {protocol.position?.positionDetails?.apy ? `${protocol.position.positionDetails.apy.toFixed(2)}%` : 'N/A'}
+                    </TableCell>
                   </TableRow>
                 ))
             )}
           </TableBody>
-        </Table> */}
+        </Table>
 
         <div className="grid grid-cols-1 gap-8">
           <div>

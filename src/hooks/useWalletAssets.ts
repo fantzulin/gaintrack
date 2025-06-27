@@ -29,7 +29,7 @@ export function useWalletDeFi() {
         console.error(err);
       } finally {
         setIsLoading(false);
-      }
+      }      
     };
 
     fetchDefi();
