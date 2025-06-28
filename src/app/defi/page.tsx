@@ -38,6 +38,8 @@ export default function DeFiPage() {
 
   useEffect(() => {
     setMounted(true);
+    console.log("defi", defi)
+    console.log("compoundPositions", compoundPositions)
   }, [defi, compoundPositions]);
 
   if (!mounted) {
@@ -123,6 +125,23 @@ export default function DeFiPage() {
                         className="rounded-full"
                       />
                       <span className="ml-2">{protocol.protocolName}</span>
+                      {protocol.position.tokens?.map((token: any, index: any) => (
+                        <>
+                          {token.tokenType === "supplied" ?
+                            <>
+                              <Image 
+                                src={token.logo} 
+                                alt={token.symbol} 
+                                width={20} 
+                                height={20} 
+                                className="rounded-full ml-2"
+                              />
+                              <span key={index} className="ml-2">{token.symbol}</span>
+                            </>
+                            : ""
+                          }
+                        </>
+                      ))}
                     </TableCell>
                     <TableCell>
                       {protocol.position?.balanceUsd ? `$${protocol.position.balanceUsd.toFixed(2)}` : '$0.00'}

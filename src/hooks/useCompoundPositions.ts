@@ -7,6 +7,7 @@ import {
   calculateCompoundPosition,
   CompoundPosition 
 } from '@/lib/compound-contract';
+import { useCompoundSupplyData } from '@/components/defi/compound-supply';
 
 export function useCompoundPositions() {
   const { address, isConnected } = useAccount();
@@ -14,28 +15,33 @@ export function useCompoundPositions() {
   const [compoundPositions, setCompoundPositions] = useState<CompoundPosition[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { supplyData: compoundSupplyData, isLoading: isSupplyLoading, error: supplyError } = useCompoundSupplyData();
 
   useEffect(() => {
     const fetchCompoundPositions = async () => {
-      if (!isConnected || !address || !chainId) return;
+      if (!isConnected || !address || !chainId || isSupplyLoading) return;
 
       setIsLoading(true);
       setError(null);
 
       try {
-        // 獲取 provider
         const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
         
-        // 獲取 Compound 資產
         const assets = await getCompoundAssets(address, `0x${chainId.toString(16)}`, provider);
         
         if (assets.length > 0) {
-          // 獲取代幣價格
+          const assetsWithApy = assets.map(asset => {
+            const supplyInfo = compoundSupplyData.find(data => data.symbol === asset.symbol);
+            return {
+              ...asset,
+              supplyRate: supplyInfo ? supplyInfo.supplyAPY : 0,
+            };
+          });
+
           const tokenAddresses = assets.map(asset => asset.underlyingAddress);
           const prices = await getTokenPrices(tokenAddresses, `0x${chainId.toString(16)}`);
           
-          // 計算 Compound position
-          const compoundPosition = calculateCompoundPosition(assets, prices);
+          const compoundPosition = calculateCompoundPosition(assetsWithApy, prices);
           setCompoundPositions([compoundPosition]);
         } else {
           setCompoundPositions([]);
@@ -49,11 +55,12 @@ export function useCompoundPositions() {
     };
 
     fetchCompoundPositions();
-  }, [address, isConnected, chainId]);
+  }, [address, isConnected, chainId, compoundSupplyData, isSupplyLoading]);
 
   return {
     compoundPositions,
-    isLoading,
-    error,
+    isLoading: isLoading || isSupplyLoading,
+    error: error || supplyError,
   };
-} 
+}
+ 

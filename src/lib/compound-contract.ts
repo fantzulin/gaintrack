@@ -1,6 +1,15 @@
 import { ethers } from 'ethers';
 import { COMPOUND_CONTRACTS, COMPOUND_ABI, COMPOUND_TOKENS } from './contracts/compound';
 
+export interface PositionToken {
+  tokenType: 'supplied';
+  logo: string;
+  symbol: string;
+  balance: number;
+  balanceUsd: number;
+  apy: number;
+}
+
 export interface CompoundPosition {
   protocolName: string;
   protocolId: string;
@@ -8,6 +17,7 @@ export interface CompoundPosition {
   protocolLogo: string;
   position: {
     balanceUsd: number;
+    tokens: PositionToken[];
     positionDetails: {
       apy: number;
       healthFactor?: number;
@@ -43,18 +53,14 @@ export const getCompoundAssets = async (
 
     const positions: TokenPosition[] = [];
     
-    // 遍歷所有 cToken 合約
     const cTokenAddresses = Object.values(compoundContracts);
     
-    // 並行查詢所有 cToken 的餘額
     const assetPromises = cTokenAddresses.map(async (cTokenAddress: string) => {
       try {
         const cToken = new ethers.Contract(cTokenAddress, COMPOUND_ABI, provider);
         
-        // 查詢用戶在該 cToken 的餘額
         const supplyBalance = await cToken.balanceOf(address);
         
-        // 如果餘額為 0，跳過
         if (supplyBalance.toString() === '0') {
           return null;
         }
@@ -65,34 +71,28 @@ export const getCompoundAssets = async (
           return null;
         }
 
-        // 查詢 underlying token 地址
-        let underlyingAddress = cTokenAddress; // 默認值
+        let underlyingAddress = cTokenAddress;
         try {
           underlyingAddress = await cToken.underlying();
         } catch (error) {
           console.warn(`Could not get underlying for ${cTokenAddress}:`, error);
-          // 如果無法查詢 underlying，使用硬編碼的映射
           const underlyingMap: Record<string, string> = {
-            '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831', // cUSDCv3 -> USDC
-            '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9', // cUSDTv3 -> USDT
-            '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // cUSDCEv3 -> USDC.e
+            '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+            '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+            '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
           };
           underlyingAddress = underlyingMap[cTokenAddress] || cTokenAddress;
         }
 
-        // 查詢 exchange rate
-        let exchangeRate = ethers.parseUnits('1', 18); // 默認值
+        let exchangeRate = ethers.parseUnits('1', 18);
         try {
           exchangeRate = await cToken.exchangeRateStored();
         } catch (error) {
           console.warn(`Could not get exchange rate for ${cTokenAddress}:`, error);
         }
 
-        // 計算實際的 underlying token 餘額
-        // 公式：underlyingBalance = cTokenBalance * exchangeRate / (10^18)
         const underlyingBalance = (supplyBalance * exchangeRate) / ethers.parseUnits('1', 18);
         
-        // 根據代幣精度格式化餘額
         const formattedBalance = Number(ethers.formatUnits(underlyingBalance, tokenInfo.decimals));
 
         return {
@@ -100,7 +100,7 @@ export const getCompoundAssets = async (
           name: tokenInfo.name,
           logo: tokenInfo.logo,
           supplyBalance: formattedBalance,
-          supplyRate: 0, // 暫時設為 0，之後可以添加利率查詢
+          supplyRate: 0, 
           exchangeRate: Number(ethers.formatEther(exchangeRate)),
           underlyingAddress
         };
@@ -120,17 +120,13 @@ export const getCompoundAssets = async (
   }
 };
 
-// 獲取代幣價格（使用 Moralis 或其他價格 API）
 export const getTokenPrices = async (tokenAddresses: string[], chainId: string) => {
-  // 這裡你需要實現價格查詢邏輯
-  // 可以使用 Moralis、CoinGecko 或其他價格 API
   const prices: Record<string, number> = {};
   
-  // 示例：硬編碼一些常見代幣的價格
   const commonPrices: Record<string, number> = {
-    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': 1, // USDC (Arbitrum)
-    '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': 1, // USDT (Arbitrum)
-    '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 1, // USDC.e (Arbitrum)
+    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': 1,
+    '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': 1,
+    '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8': 1,
   };
   
   for (const address of tokenAddresses) {
@@ -141,7 +137,6 @@ export const getTokenPrices = async (tokenAddresses: string[], chainId: string) 
   return prices;
 };
 
-// 計算 Compound position
 export const calculateCompoundPosition = (
   positions: TokenPosition[],
   prices: Record<string, number>
@@ -150,6 +145,7 @@ export const calculateCompoundPosition = (
   let totalSupplyValue = 0;
   let weightedSupplyAPY = 0;
   let totalSupplyWeight = 0;
+  const tokens: PositionToken[] = [];
 
   positions.forEach(pos => {
     const price = prices[pos.underlyingAddress] || 0;
@@ -161,6 +157,15 @@ export const calculateCompoundPosition = (
       weightedSupplyAPY += pos.supplyRate * supplyValue;
       totalSupplyWeight += supplyValue;
     }
+
+    tokens.push({
+      tokenType: 'supplied',
+      logo: pos.logo,
+      symbol: pos.symbol,
+      balance: pos.supplyBalance,
+      balanceUsd: supplyValue,
+      apy: pos.supplyRate,
+    });
   });
 
   const netAPY = totalSupplyWeight > 0 ? weightedSupplyAPY / totalSupplyWeight : 0;
@@ -169,12 +174,13 @@ export const calculateCompoundPosition = (
     protocolName: 'Compound',
     protocolId: 'compound',
     protocolUrl: 'https://app.compound.finance/',
-    protocolLogo: 'https://cdn.moralis.io/defi/compound.png',
+    protocolLogo: '/compound.png',
     position: {
       balanceUsd: totalSupplyValue,
+      tokens: tokens,
       positionDetails: {
         apy: netAPY,
-        healthFactor: undefined, // Compound V3 可能沒有 health factor
+        healthFactor: undefined,
         projectedEarningsUsd: totalSupplyValue * (netAPY / 100)
       }
     }
@@ -183,7 +189,6 @@ export const calculateCompoundPosition = (
   return result;
 };
 
-// 輔助函數：將 chainId 轉換為鏈名稱
 function getChainName(chainId: string): string {
   const chainMap: Record<string, string> = {
     '0x1': 'ethereum',
