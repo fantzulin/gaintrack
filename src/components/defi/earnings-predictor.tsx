@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { useWalletAssets } from "@/hooks/useWalletAssets";
+import { useCompoundPositions } from "@/hooks/useCompoundPositions";
+import { useAavePositions } from "@/hooks/useAavePositions";
 import { SupplyButton } from "./supply-button";
+import { WithdrawButton } from "./withdraw-button";
 import Image from "next/image";
 
 interface EarningsPredictorProps {
@@ -47,12 +50,24 @@ const MARKET_ADDRESSES = {
 
 export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol }: EarningsPredictorProps) {
   const { assets, isLoading } = useWalletAssets();
+  const { compoundPositions, isLoading: isCompoundPositionsLoading } = useCompoundPositions();
+  const { aavePositions, isLoading: isAavePositionsLoading } = useAavePositions();
   const [projectedData, setProjectedData] = useState<ProjectedData[]>([]);
 
   // 獲取選中幣種的餘額
   const selectedAsset = assets.find(a => a.symbol === selectedToken);
   const selectedCoin = STABLE_COINS.find(coin => coin.symbol === selectedToken);
   const balance = selectedAsset?.usdValue || 0;
+
+  // 獲取已存入的餘額
+  let suppliedBalance = 0;
+  if (selectedProtocol === "compound") {
+    const suppliedAsset = compoundPositions[0]?.position.tokens.find(t => t.symbol === selectedToken);
+    suppliedBalance = suppliedAsset?.balance || 0;
+  } else if (selectedProtocol === "aave") {
+    const suppliedAsset = aavePositions[0]?.position.tokens.find(t => t.symbol === selectedToken);
+    suppliedBalance = suppliedAsset?.supplyBalance || 0;
+  }
 
   useEffect(() => {
     if (currentAPY > 0 && selectedToken) {
@@ -125,13 +140,23 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol 
                   <span className="text-2xl font-bold">${balance.toLocaleString()}</span>
                 </div>
                 {selectedProtocol && selectedToken && (
-                  <SupplyButton
-                    protocol={selectedProtocol as "aave" | "compound"}
-                    tokenSymbol={selectedToken}
-                    tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
-                    marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
-                    currentAPY={currentAPY}
-                  />
+                  <div className="flex space-x-2">
+                    <SupplyButton
+                      protocol={selectedProtocol as "aave" | "compound"}
+                      tokenSymbol={selectedToken}
+                      tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      currentAPY={currentAPY}
+                      walletBalance={balance}
+                    />
+                    <WithdrawButton
+                      protocol={selectedProtocol as "aave" | "compound"}
+                      tokenSymbol={selectedToken}
+                      tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      suppliedBalance={suppliedBalance}
+                    />
+                  </div>
                 )}
               </div>
               {currentAPY > 0 && (

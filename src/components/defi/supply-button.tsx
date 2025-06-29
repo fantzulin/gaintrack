@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,7 @@ interface SupplyButtonProps {
   tokenAddress: string;
   marketAddress: string;
   currentAPY: number;
+  walletBalance: number;
 }
 
 // ERC20 ABI for approve function and allowance
@@ -79,11 +80,12 @@ const COMPOUND_COMET_ABI = [
   }
 ] as const;
 
-export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY }: SupplyButtonProps) {
-  const { address, isConnected } = useAccount();
+export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance }: SupplyButtonProps) {
+  const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"approve" | "supply" | "complete">("approve");
+  const processedHashRef = useRef<string | null>(null);
 
   // Read current allowance
   const { data: currentAllowance, isLoading: isAllowanceLoading, error: allowanceError } = useReadContract({
@@ -94,16 +96,6 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
     query: {
       enabled: !!address && !!tokenAddress && !!marketAddress,
     },
-  });
-
-  // Debug information
-  console.log("Allowance Debug:", {
-    tokenAddress,
-    marketAddress,
-    userAddress: address,
-    currentAllowance: currentAllowance?.toString(),
-    allowanceError,
-    isAllowanceLoading
   });
 
   // Single write contract hook for all transactions
@@ -189,16 +181,44 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
 
   // Handle transaction completion - improved logic
   useEffect(() => {
-    if (hash && !isConfirming) {
+    if (hash && hash !== processedHashRef.current && !isConfirming) {
+      let explorerUrl = "";
+      let explorerName = "";
+
+      switch (chainId) {
+        case 1:
+          explorerUrl = `https://etherscan.io/tx/${hash}`;
+          explorerName = "Etherscan";
+          break;
+        case 42161:
+          explorerUrl = `https://arbiscan.io/tx/${hash}`;
+          explorerName = "Arbiscan";
+          break;
+      }
+
       if (step === "approve") {
         setStep("supply");
         toast.success("Approval completed! Please proceed with supply.");
+        processedHashRef.current = hash;
       } else if (step === "supply") {
         setStep("complete");
-        toast.success("Supply completed successfully!");
+        if (explorerUrl) {
+          const toastMessage = (
+            <div>
+              <p>Transaction successful!</p>
+              <a href={explorerUrl} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">
+                View on {explorerName}
+              </a>
+            </div>
+          );
+          toast.success(toastMessage);
+        } else {
+          toast.success("Supply completed successfully!");
+        }
+        processedHashRef.current = hash;
       }
     }
-  }, [hash, isConfirming, step]);
+  }, [hash, isConfirming, step, chainId]);
 
   const isProcessing = isPending || isConfirming;
 
@@ -244,6 +264,7 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
             <p>Protocol: {protocol.toUpperCase()}</p>
             <p>APY: {currentAPY.toFixed(2)}%</p>
             <p>Token: {tokenSymbol}</p>
+            <p>Wallet Balance: ${walletBalance.toLocaleString()}</p>
             {!isAllowanceLoading && (
               <p>Current Allowance: {formattedAllowance} {tokenSymbol}</p>
             )}
