@@ -62,8 +62,10 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol 
   // 獲取已存入的餘額
   let suppliedBalance = 0;
   if (selectedProtocol === "compound") {
-    const suppliedAsset = compoundPositions[0]?.position.tokens.find(t => t.symbol === selectedToken);
-    suppliedBalance = suppliedAsset?.balance || 0;
+    const suppliedAsset = compoundPositions
+      .flatMap((position) => position.position.tokens)
+      .find((token) => token.symbol === selectedToken);
+    suppliedBalance = suppliedAsset?.balanceUsd || 0;
   } else if (selectedProtocol === "aave") {
     const suppliedAsset = aavePositions[0]?.position.tokens.find(t => t.symbol === selectedToken);
     suppliedBalance = suppliedAsset?.supplyBalance || 0;

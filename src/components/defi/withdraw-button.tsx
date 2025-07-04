@@ -113,21 +113,20 @@ export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddr
     try {
       const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
       
-      if (protocol === "aave") {
+      (protocol === "aave") ?
         writeContract({
           address: marketAddress as `0x${string}`,
           abi: AAVE_POOL_ABI,
           functionName: "withdraw",
           args: [tokenAddress as `0x${string}`, amountWei, address as `0x${string}`],
-        });
-      } else if (protocol === "compound") {
+        })
+      : (protocol === "compound") 
         writeContract({
           address: marketAddress as `0x${string}`,
           abi: COMPOUND_COMET_ABI,
           functionName: "withdraw",
           args: [tokenAddress as `0x${string}`, amountWei],
         });
-      }
 
       toast.success(`Withdraw ${amount} ${tokenSymbol} from ${protocol.toUpperCase()} initiated!`);
     } catch (error) {

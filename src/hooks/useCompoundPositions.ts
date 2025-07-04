@@ -41,8 +41,10 @@ export function useCompoundPositions() {
           const tokenAddresses = assets.map(asset => asset.underlyingAddress);
           const prices = await getTokenPrices(tokenAddresses, `0x${chainId.toString(16)}`);
           
-          const compoundPosition = calculateCompoundPosition(assetsWithApy, prices);
-          setCompoundPositions([compoundPosition]);
+          const positions = assetsWithApy.map(asset => {
+            return calculateCompoundPosition([asset], prices);
+          });
+          setCompoundPositions(positions);
         } else {
           setCompoundPositions([]);
         }
