@@ -24,6 +24,7 @@ interface SupplyButtonProps {
   marketAddress: string;
   currentAPY: number;
   walletBalance: number;
+  tokenDecimals: number;
 }
 
 // ERC20 ABI for approve function and allowance
@@ -80,7 +81,7 @@ const COMPOUND_COMET_ABI = [
   }
 ] as const;
 
-export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance }: SupplyButtonProps) {
+export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance, tokenDecimals }: SupplyButtonProps) {
   const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -124,7 +125,7 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
     }
 
     try {
-      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+      const amountWei = parseUnits(amount, tokenDecimals);
       
       // Check if current allowance is sufficient
       if (currentAllowance && currentAllowance >= amountWei) {
@@ -154,7 +155,7 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
     }
 
     try {
-      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+      const amountWei = parseUnits(amount, tokenDecimals);
       
       if (protocol === "aave") {
         writeContract({
@@ -223,8 +224,8 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
   const isProcessing = isPending || isConfirming;
 
   // Format current allowance for display
-  const formattedAllowance = currentAllowance ? formatUnits(currentAllowance, 6) : "0";
-  const needsApproval = amount && currentAllowance ? parseUnits(amount, 6) > currentAllowance : true;
+  const formattedAllowance = currentAllowance ? formatUnits(currentAllowance, tokenDecimals) : "0";
+  const needsApproval = amount && currentAllowance ? parseUnits(amount, tokenDecimals) > currentAllowance : true;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>

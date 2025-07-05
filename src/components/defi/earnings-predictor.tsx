@@ -15,6 +15,7 @@ interface EarningsPredictorProps {
   currentAPY: number;
   selectedToken: string;
   selectedProtocol: string;
+  selectedTokenAddress: string;
 }
 
 interface ProjectedData {
@@ -26,6 +27,7 @@ const STABLE_COINS = [
   { symbol: "USDC", color: "#2775CA" },
   { symbol: "USDT", color: "#26A17B" },
   { symbol: "DAI", color: "#F5AC37" },
+  { symbol: "USDCe", color: "#2775CA" },
 ];
 
 // Token addresses and market addresses
@@ -33,6 +35,14 @@ const TOKEN_ADDRESSES = {
   USDC: "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
   USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
   DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+  USDCe: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+} as const;
+
+const TOKEN_DECIMALS = {
+  USDC: 6,
+  USDT: 6,
+  DAI: 18,
+  USDCe: 6,
 } as const;
 
 const MARKET_ADDRESSES = {
@@ -40,22 +50,41 @@ const MARKET_ADDRESSES = {
     USDC: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
     USDT: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
     DAI: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
+    USDCe: "",
   },
   compound: {
     USDC: "0x9c4ec768c28520b50860ea7a15bd7213a9ff58bf",
     USDT: "0xd98be00b5d27fc98112bde293e487f8d4ca57d07",
-    DAI: "0x9c4ec768c28520b50860ea7a15bd7213a9ff58bf",
+    DAI: "",
+    USDCe: "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
   },
 } as const;
 
-export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol }: EarningsPredictorProps) {
+type Protocol = keyof typeof MARKET_ADDRESSES;
+type Token = keyof typeof TOKEN_ADDRESSES;
+
+function getMarketAddress(protocol: string, token: string): string {
+  const p = protocol as Protocol;
+  const t = token as Token;
+
+  if (p in MARKET_ADDRESSES) {
+    const protocolMarkets = MARKET_ADDRESSES[p];
+    if (t in protocolMarkets) {
+      return protocolMarkets[t];
+    }
+  }
+  console.warn(`Invalid protocol/token combination: ${protocol}/${token}`);
+  return "";
+}
+
+export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddress, selectedProtocol }: EarningsPredictorProps) {
   const { assets, isLoading } = useWalletAssets();
   const { compoundPositions, isLoading: isCompoundPositionsLoading } = useCompoundPositions();
   const { aavePositions, isLoading: isAavePositionsLoading } = useAavePositions();
   const [projectedData, setProjectedData] = useState<ProjectedData[]>([]);
 
   // 獲取選中幣種的餘額
-  const selectedAsset = assets.find(a => a.symbol === selectedToken);
+  const selectedAsset = assets.find(a => a.tokenAddress._value.toLowerCase() === selectedTokenAddress.toLowerCase());
   const selectedCoin = STABLE_COINS.find(coin => coin.symbol === selectedToken);
   const balance = selectedAsset?.usdValue || 0;
 
@@ -67,7 +96,9 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol 
       .find((token) => token.symbol === selectedToken);
     suppliedBalance = suppliedAsset?.balanceUsd || 0;
   } else if (selectedProtocol === "aave") {
-    const suppliedAsset = aavePositions[0]?.position.tokens.find(t => t.symbol === selectedToken);
+    const suppliedAsset = aavePositions
+      .flatMap((position) => position.position.tokens)
+      .find((token) => token.symbol === selectedToken);
     suppliedBalance = suppliedAsset?.supplyBalance || 0;
   }
 
@@ -147,15 +178,16 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedProtocol 
                       protocol={selectedProtocol as "aave" | "compound"}
                       tokenSymbol={selectedToken}
                       tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
-                      marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      marketAddress={getMarketAddress(selectedProtocol, selectedToken)}
                       currentAPY={currentAPY}
                       walletBalance={balance}
+                      tokenDecimals={TOKEN_DECIMALS[selectedToken as keyof typeof TOKEN_DECIMALS]}
                     />
                     <WithdrawButton
                       protocol={selectedProtocol as "aave" | "compound"}
                       tokenSymbol={selectedToken}
                       tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
-                      marketAddress={MARKET_ADDRESSES[selectedProtocol as keyof typeof MARKET_ADDRESSES][selectedToken as keyof typeof TOKEN_ADDRESSES]}
+                      marketAddress={getMarketAddress(selectedProtocol, selectedToken)}
                       suppliedBalance={suppliedBalance}
                     />
                   </div>

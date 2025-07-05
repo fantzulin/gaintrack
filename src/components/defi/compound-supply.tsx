@@ -4,6 +4,7 @@ import { ethers } from "ethers";
 
 export interface CompoundSupply {
   symbol: string;
+  address: string;
   logo: string;
   supplyAPY: number;
   borrowAPY: number;
@@ -28,7 +29,7 @@ const MARKETS = {
 
 const assets = [
   {
-    symbol: "USDC.e",
+    symbol: "USDCe",
     logo: "https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png",
     address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
     marketAddress: MARKETS.USDCe,
@@ -82,6 +83,7 @@ export function useCompoundSupplyData() {
                 return {
                   symbol: asset.symbol,
                   logo: asset.logo,
+                  address: asset.address,
                   supplyAPY: Number(supplyAPY.toFixed(2)),
                   borrowAPY: Number(borrowAPY.toFixed(2)),
                   totalSupply: 0,
@@ -94,6 +96,7 @@ export function useCompoundSupplyData() {
               console.error(`Error fetching data for ${asset.symbol}:`, err);
               return {
                 symbol: asset.symbol,
+                address: asset.address,
                 logo: asset.logo,
                 supplyAPY: 0,
                 borrowAPY: 0,

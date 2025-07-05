@@ -5,6 +5,7 @@ import { ethers } from "ethers";
 export interface AaveSupply {
   symbol: string;
   logo: string;
+  address: string;
   supplyAPY: number;
   borrowAPY: number;
   totalSupply: number;
@@ -30,7 +31,7 @@ const assets = [
     address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
   },
   {
-    symbol: "Dai",
+    symbol: "DAI",
     logo: "https://logo.moralis.io/0xa4b1_0xda10009cbd5d07dd0cecc66161fc93d7c9000da1_247e8cebb18c62db70489edbff8cc6d8.png",
     address: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
   },
@@ -55,6 +56,7 @@ export function useAaveSupplyData() {
             return {
               symbol: asset.symbol,
               logo: asset.logo,
+              address: asset.address,
               supplyAPY: Number(supplyAPY.toFixed(2)),
               borrowAPY: Number(borrowAPY.toFixed(2)),
               totalSupply: 0,

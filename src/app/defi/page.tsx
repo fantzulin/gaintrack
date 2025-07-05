@@ -34,12 +34,11 @@ export default function DeFiPage() {
   const [mounted, setMounted] = useState(false);
   const [selectedAPY, setSelectedAPY] = useState<number>(0);
   const [selectedToken, setSelectedToken] = useState<string>("");
+  const [selectedTokenAdress, setSelectedTokenAdress] = useState<string>("");
   const [selectedProtocol, setSelectedProtocol] = useState<string>("");
 
   useEffect(() => {
     setMounted(true);
-    console.log("defi", defi)
-    console.log("compoundPositions", compoundPositions)
   }, [defi, compoundPositions]);
 
   if (!mounted) {
@@ -113,7 +112,7 @@ export default function DeFiPage() {
               </TableRow>
             ) : (
               [...defi, ...compoundPositions]
-                .filter(protocol => protocol.position.balanceUsd > 0)
+                .filter(protocol => protocol.position.balanceUsd > 0.1)
                 .map((protocol, index) => (
                   <TableRow key={index}>
                     <TableCell className="flex items-center">
@@ -168,6 +167,7 @@ export default function DeFiPage() {
                   onClick={() => {
                     setSelectedAPY(asset.supplyAPY);
                     setSelectedToken(asset.symbol);
+                    setSelectedTokenAdress(asset.address);
                     setSelectedProtocol('aave');
                   }}
                 >
@@ -225,6 +225,7 @@ export default function DeFiPage() {
                   onClick={() => {
                     setSelectedAPY(asset.supplyAPY);
                     setSelectedToken(asset.symbol);
+                    setSelectedTokenAdress(asset.address);
                     setSelectedProtocol('compound');
                   }}
                 >
@@ -276,6 +277,7 @@ export default function DeFiPage() {
           <EarningsPredictor 
             currentAPY={selectedAPY} 
             selectedToken={selectedToken}
+            selectedTokenAddress={selectedTokenAdress}
             selectedProtocol={selectedProtocol}
           />
         </div>
