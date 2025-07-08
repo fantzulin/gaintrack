@@ -38,7 +38,7 @@ const AAVE_V3_ATOKEN_ADDRESSES: Record<number, {
   42161: { // Arbitrum One
     aUSDC: "0x724dc807b04555b71ed48a6896b6F41593b8C637", // aUSDC v3
     aUSDT: "0x6ab707Aca953eDAeFBc4fD23bA73294241490620", // aUSDT v3 (Note: aUSDT on Arbitrum is often the same as aUSDC due to bridging)
-    aDAI: "0x625E7708f30cA75bfd92746714Cdbd685a4f54af", // aDAI v3 (Note: aDAI on Arbitrum is often the same as aUSDC due to bridging)
+    aDAI: "0x82e64f49ed5ec1bc6e43dad4fc8af9bb3a2312ee", // aDAI v3
   },
 };
 

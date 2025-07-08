@@ -111,7 +111,7 @@ export default function DeFiPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              [...defi, ...compoundPositions]
+              [...defi.filter(p => p.protocolId !== 'compound'), ...compoundPositions]
                 .filter(protocol => protocol.position.balanceUsd > 0.1)
                 .map((protocol, index) => (
                   <TableRow key={index}>

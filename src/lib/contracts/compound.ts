@@ -19,7 +19,7 @@ export const COMPOUND_ABI = [
 // Token 信息配置
 export const COMPOUND_TOKENS = {
   '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA': {
-    symbol: 'USDC.e',
+    symbol: 'USDCe',
     name: 'Compound USDC.e',
     decimals: 6,
     logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png'
