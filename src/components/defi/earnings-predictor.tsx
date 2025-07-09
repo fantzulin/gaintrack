@@ -189,6 +189,7 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
                       tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
                       marketAddress={getMarketAddress(selectedProtocol, selectedToken)}
                       suppliedBalance={suppliedBalance}
+                      tokenDecimals={TOKEN_DECIMALS[selectedToken as keyof typeof TOKEN_DECIMALS]}
                     />
                   </div>
                 )}

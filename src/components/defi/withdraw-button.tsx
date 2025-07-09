@@ -23,6 +23,7 @@ interface WithdrawButtonProps {
   tokenAddress: string;
   marketAddress: string;
   suppliedBalance: number;
+  tokenDecimals: number;
 }
 
 // Aave V3 Pool ABI for withdraw function
@@ -80,12 +81,41 @@ const COMPOUND_COMET_ABI = [
   }
 ] as const;
 
-export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddress, suppliedBalance }: WithdrawButtonProps) {
+// ERC20 ABI for decimals function
+const ERC20_DECIMALS_ABI = [
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "decimals",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddress, suppliedBalance, tokenDecimals }: WithdrawButtonProps) {
   const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"withdraw" | "complete">("withdraw");
   const processedHashRef = useRef<string | null>(null);
+
+  const { data: fetchedDecimals } = useReadContract({
+    address: tokenAddress as `0x${string}`,
+    abi: ERC20_DECIMALS_ABI,
+    functionName: 'decimals',
+    query: {
+      enabled: !!tokenAddress && tokenDecimals === undefined,
+    },
+  });
+
+  const decimals = tokenDecimals ?? fetchedDecimals;
 
   const { 
     data: hash, 
@@ -104,6 +134,11 @@ export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddr
       return;
     }
 
+    if (decimals === undefined) {
+      toast.error("Could not determine token decimals. Please try again.");
+      return;
+    }
+
     const numAmount = parseFloat(amount);
     if (isNaN(numAmount) || numAmount <= 0) {
       toast.error("Please enter a valid amount");
@@ -111,7 +146,7 @@ export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddr
     }
 
     try {
-      const amountWei = parseUnits(amount, 6); // USDC has 6 decimals
+      const amountWei = parseUnits(amount, decimals);
       
       (protocol === "aave") ?
         writeContract({
