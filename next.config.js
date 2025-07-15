@@ -12,6 +12,11 @@ const nextConfig = {
         hostname: 'logo.moralis.io',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'asset.brandfetch.io',
+        pathname: '/**',
+      },
     ],
   },
 
