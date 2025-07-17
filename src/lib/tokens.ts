@@ -45,7 +45,7 @@ export const ARBITRUM_TOKENS: Token[] = [
     symbol: "WETH",
     address: "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
     decimals: 18,
-    logoURI: "https://logo.moralis.io/0xa4b1_0x82af49447d8a07e3bd95bd0d56f35241523fbab1_a35b32db5b4e435d83032139de44d34c.png",
+    logoURI: "https://logo.moralis.io/0xa4b1_0x82af49447d8a07e3bd95bd0d56f35241523fbab1_03f6d08a9f4a4aad3a5b129ad0900dd3.png",
     minAmount: "0.001", // 0.001 WETH
   },
 ];

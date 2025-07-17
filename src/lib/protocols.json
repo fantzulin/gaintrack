@@ -1,0 +1,107 @@
+[
+  {
+    "name": "0x",
+    "url": "https://www.0x.org/",
+    "logo": "https://icons.llama.fi/0x.png"
+  },
+  {
+    "name": "Angle",
+    "url": "https://app.angle.money",
+    "logo": "https://icons.llama.fi/angle.jpg"
+  },
+  {
+    "name": "Arbswap",
+    "url": "https://arbswap.io",
+    "logo": "https://icons.llama.fi/arbswap.jpg"
+  },
+  {
+    "name": "Balancer",
+    "url": "https://balancer.fi",
+    "logo": "https://icons.llama.fi/balancer.png"
+  },
+  {
+    "name": "Camelot",
+    "url": "https://camelot.exchange/",
+    "logo": "https://icons.llama.fi/camelot.png"
+  },
+  {
+    "name": "Curve",
+    "url": "https://curve.finance",
+    "logo": "https://icons.llama.fi/curve.png"
+  },
+  {
+    "name": "DODO",
+    "url": "https://dodoex.io",
+    "logo": "https://icons.llama.fi/dodo.png"
+  },
+  {
+    "name": "DeltaSwap",
+    "url": "https://gammaswap.com",
+    "logo": "https://icons.llama.fi/deltaswap.jpg"
+  },
+  {
+    "name": "Fluid",
+    "url": "https://fluid.instadapp.io",
+    "logo": "https://icons.llama.fi/fluid.png"
+  },
+  {
+    "name": "GMX",
+    "url": "https://gmxsol.io/",
+    "logo": "https://icons.llama.fi/gmx.png"
+  },
+  {
+    "name": "Integral",
+    "url": "https://integral.link/",
+    "logo": "https://icons.llama.fi/integral.jpg"
+  },
+  {
+    "name": "PancakeSwap",
+    "url": "https://pancakeswap.finance",
+    "logo": "https://icons.llama.fi/pancakeswap.jpg"
+  },
+  {
+    "name": "Solidly",
+    "url": "https://solidly.exchange/",
+    "logo": "https://icons.llama.fi/solidly.jpg"
+  },
+  {
+    "name": "SpartaDex",
+    "url": "https://spartadex.io/",
+    "logo": "https://icons.llama.fi/spartadex.jpg"
+  },
+  {
+    "name": "SushiSwap",
+    "url": "https://sushi.com/",
+    "logo": "https://icons.llama.fi/sushiswap.png"
+  },
+  {
+    "name": "Swaap",
+    "url": "https://www.swaap.finance",
+    "logo": "https://icons.llama.fi/swaap.png"
+  },
+  {
+    "name": "Swapr",
+    "url": "https://swapr.eth.limo/",
+    "logo": "https://icons.llama.fi/swapr.jpg"
+  },
+  {
+    "name": "Synapse",
+    "url": "https://synapseprotocol.com",
+    "logo": "https://icons.llama.fi/synapse.png"
+  },
+  {
+    "name": "TraderJoe",
+    "url": "https://lfj.gg/",
+    "logo": "https://icons.llama.fi/trader-joe.png"
+  },
+  {
+    "name": "Uniswap",
+    "url": "https://uniswap.org/",
+    "logo": "https://icons.llama.fi/uniswap.png"
+  },
+  {
+    "name": "WOOFi",
+    "url": "https://fi.woo.org",
+    "logo": "https://icons.llama.fi/woofi.png"
+  }
+]
