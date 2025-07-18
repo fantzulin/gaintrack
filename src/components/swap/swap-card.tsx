@@ -27,9 +27,10 @@ const shortenAddress = (address: string) => {
 
 interface SwapCardProps {
   onQuoteUpdate?: (quote: any) => void;
+  onContractInfoUpdate?: (info: any) => void;
 }
 
-export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
+export function SwapCard({ onQuoteUpdate, onContractInfoUpdate }: SwapCardProps) {
   const { address, isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const [sellToken, setSellToken] = useState<Token>(ARBITRUM_TOKENS[0]); // Default to USDC
@@ -41,7 +42,6 @@ export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [isSwapping, setIsSwapping] = useState(false);
   const [swapStatus, setSwapStatus] = useState<string>("");
-  const [contractInfo, setContractInfo] = useState<any>(null);
   const { assets } = useWalletAssets();
 
   const sellTokenBalance = assets.find(asset => asset.tokenAddress._value.toLowerCase() === sellToken.address.toLowerCase());
@@ -89,11 +89,16 @@ export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
               const validateResponse = await fetch(`/api/validate-0x-address?address=${data.transaction.to}`);
               if (validateResponse.ok) {
                 const contractInfo = await validateResponse.json();
-                setContractInfo(contractInfo);
+                onContractInfoUpdate?.(contractInfo);
+              } else {
+                onContractInfoUpdate?.(null);
               }
             } catch (error) {
+              onContractInfoUpdate?.(null);
               console.log('Could not validate 0x address:', error);
             }
+          } else {
+            onContractInfoUpdate?.(null);
           }
           
           setQuote(data);
@@ -122,6 +127,7 @@ export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
           setBuyAmount("");
           setQuote(null);
           onQuoteUpdate?.(null);
+          onContractInfoUpdate?.(null);
           setErrorMessage(error instanceof Error ? error.message : 'Failed to fetch quote');
         } finally {
           setIsFetchingQuote(false);
@@ -130,6 +136,7 @@ export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
         setBuyAmount("");
         setQuote(null);
         onQuoteUpdate?.(null);
+        onContractInfoUpdate?.(null);
         setErrorMessage(""); // 清除錯誤訊息
       }
     };
@@ -311,20 +318,6 @@ export function SwapCard({ onQuoteUpdate }: SwapCardProps) {
         {swapStatus && !errorMessage && (
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-600" dangerouslySetInnerHTML={{ __html: swapStatus }} />
-          </div>
-        )}
-        
-        {/* 0x 合約信息顯示 */}
-        {contractInfo && contractInfo.isZeroXContract && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-sm text-green-600">
-              <strong>✅ Verified 0x Protocol Contract</strong><br/>
-              {contractInfo.name}<br/>
-              {contractInfo.description}<br/>
-              <span className="text-xs text-gray-500">
-                Address: {contractInfo.address}
-              </span>
-            </p>
           </div>
         )}
         

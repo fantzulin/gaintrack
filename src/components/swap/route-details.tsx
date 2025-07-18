@@ -4,9 +4,10 @@ import { ARBITRUM_TOKENS } from "@/lib/tokens";
 
 interface RouteDetailsProps {
   quote: any;
+  contractInfo: any;
 }
 
-export function RouteDetails({ quote }: RouteDetailsProps) {
+export function RouteDetails({ quote, contractInfo }: RouteDetailsProps) {
   if (!quote?.route?.fills) {
     return null;
   }
@@ -64,18 +65,14 @@ export function RouteDetails({ quote }: RouteDetailsProps) {
                         </div>
                         <div className="flex justify-between items-center mb-2">
                           <span className="flex items-center text-xs">
-                            {fromTokenInfo && <img src={fromTokenInfo.logoURI} alt={fromTokenInfo.symbol} className="w-4 h-4 mr-1.5 rounded-full" />}
-                            From: {fromToken?.symbol || 'Unknown'} 
-                            <span className="text-gray-500 ml-1">
-                              ({fill.from.slice(0, 6)}...{fill.from.slice(-4)})
-                            </span>
+                            From: 
+                            {fromTokenInfo && <img src={fromTokenInfo.logoURI} alt={fromTokenInfo.symbol} className="w-4 h-4 mx-1.5 rounded-full" />}
+                            {fromToken?.symbol || 'Unknown'}
                           </span>
                           <span className="flex items-center text-xs">
-                            {toTokenInfo && <img src={toTokenInfo.logoURI} alt={toTokenInfo.symbol} className="w-4 h-4 mr-1.5 rounded-full" />}
-                            To: {toToken?.symbol || 'Unknown'}
-                            <span className="text-gray-500 ml-1">
-                              ({fill.to.slice(0, 6)}...{fill.to.slice(-4)})
-                            </span>
+                            To: 
+                            {toTokenInfo && <img src={toTokenInfo.logoURI} alt={toTokenInfo.symbol} className="w-4 h-4 mx-1.5 rounded-full" />}
+                            {toToken?.symbol || 'Unknown'}
                           </span>
                         </div>
                         <div className="text-center">
@@ -94,18 +91,20 @@ export function RouteDetails({ quote }: RouteDetailsProps) {
             })}
           </ul>
         </div>
-        <div className="mt-3 text-xs text-blue-600 space-y-1">
-          <p>Total steps: {quote.route.fills.length}</p>
-          <p>Route will be executed through 0x Protocol</p>
+        <div className="mt-6 text-xs text-blue-600 space-y-1">
+          {contractInfo && contractInfo.isZeroXContract && (
+            <div>
+              <p>Source: 
+                {contractInfo.name}
+                <a href={`https://arbiscan.io/address/${contractInfo.address}`} target="_blank" rel="noopener noreferrer" className="underline ml-1">
+                  {`${contractInfo.address.slice(0, 5)}...${contractInfo.address.slice(-5)}`}
+                </a>
+              </p>
+            </div>
+          )}
           {quote.route.tokens && (
             <p>Involved tokens: {quote.route.tokens.map((t: any) => t.symbol).join(', ')}</p>
           )}
-          <div className="mt-2 pt-2 border-t border-blue-200">
-            <p className="font-medium text-blue-700">Supported Protocols on Arbitrum:</p>
-            <p className="text-xs text-blue-600">
-              Uniswap V2/V3/V4, SushiSwap, Balancer, Curve, 1inch, Kyber, Bancor, DODO, and more...
-            </p>
-          </div>
         </div>
       </div>
     </div>

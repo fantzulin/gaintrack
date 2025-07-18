@@ -50,6 +50,9 @@ export function Navbar() {
               <Link href="/dashboard" className="[text-decoration:none]">Dashboard</Link>
             </Button>
             <Button variant="ghost" asChild>
+              <Link href="/swap" className="[text-decoration:none]">Swap</Link>
+            </Button>
+            <Button variant="ghost" asChild>
               <Link href="/defi" className="[text-decoration:none]">DeFi</Link>
             </Button>
           </div>
@@ -68,6 +71,15 @@ export function Navbar() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Dashboard
+                </Link>
+              </Button>
+              <Button variant="ghost" asChild className="justify-start">
+                <Link 
+                  href="/swap" 
+                  className="[text-decoration:none]"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Swap
                 </Link>
               </Button>
               <Button variant="ghost" asChild className="justify-start">
