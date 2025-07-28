@@ -53,7 +53,9 @@ export const getDolomiteAssets = async (
 
     if (balances) {
       const receivedMarketIds = balances[0] as readonly BigInt[];
+      console.log("receivedMarketIds", receivedMarketIds)
       const receivedTokenAddresses = balances[1] as readonly `0x${string}`[];
+      console.log("receivedTokenAddresses", receivedTokenAddresses)
       const receivedPars = balances[2] as readonly {
         sign: boolean;
         value: bigint;
@@ -64,61 +66,56 @@ export const getDolomiteAssets = async (
       }[];
 
       const tokens: DolomitePositionToken[] = [];
-      let totalBalanceUsd = 0;
 
-      const pricePromises = DOLOMITE_TOKENS.map(async (token, index) => {
-        if (index < receivedWeis.length) {
+      const pricePromises = receivedTokenAddresses.map(async (tokenAddress, index) => {
+        const tokenInfo = DOLOMITE_TOKENS.find(t => t.address.toLowerCase() === tokenAddress.toLowerCase());
+        if (tokenInfo && index < receivedWeis.length) {
           const wei = receivedWeis[index].value;
-          const balance = parseFloat(formatUnits(wei, token.decimals));
+          const balance = parseFloat(formatUnits(wei, tokenInfo.decimals));
 
           if (balance > 0) {
             try {
               const priceData = await getTokenPrice(
-                token.address,
+                tokenInfo.address,
                 chainId.toString()
               );
-              const usdPrice = priceData?.usdPrice || 0; // Default to 0 if price not found
+              const usdPrice = priceData?.usdPrice || 0;
               const usdValue = balance * usdPrice;
 
-              tokens.push({
-                tokenType: "supplied",
-                logo: token.logo,
-                symbol: token.symbol,
-                balance: balance,
-                balanceUsd: usdValue,
-                apy: 0,
-              });
-              return usdValue;
+              if (usdValue > 0.1) { // Only add if it has meaningful value
+                  tokens.push({
+                    tokenType: "supplied",
+                    logo: tokenInfo.logo,
+                    symbol: tokenInfo.symbol,
+                    balance: balance,
+                    balanceUsd: usdValue,
+                    apy: 8, // Placeholder APY
+                  });
+              }
             } catch (e) {
-              console.error(`Error fetching price for ${token.symbol}:`, e);
-              return 0; // Return 0 if price fetch fails
+              console.error(`Error fetching price for ${tokenInfo.symbol}:`, e);
             }
           }
         }
-        return 0; // Return 0 if balance is not positive or index out of bounds
       });
 
-      const usdValues = await Promise.all(pricePromises);
-      totalBalanceUsd = usdValues.reduce((sum, value) => sum + value, 0);
-
+      await Promise.all(pricePromises);
       if (tokens.length > 0) {
-        const positions: DolomitePosition[] = [
-          {
-            protocolName: "Dolomite",
-            protocolId: "dolomite",
-            protocolUrl: "https://dolomite.io/",
-            protocolLogo: "/dolomite.webp",
-            position: {
-              balanceUsd: totalBalanceUsd,
-              tokens: tokens,
-              positionDetails: {
-                apy: 8,
-                healthFactor: undefined,
-                projectedEarningsUsd: totalBalanceUsd * (10 / 100),
-              },
+        const positions: DolomitePosition[] = tokens.map(token => ({
+          protocolName: "Dolomite",
+          protocolId: "dolomite",
+          protocolUrl: "https://dolomite.io/",
+          protocolLogo: "/dolomite.webp",
+          position: {
+            balanceUsd: token.balanceUsd,
+            tokens: [token],
+            positionDetails: {
+              apy: token.apy,
+              healthFactor: undefined,
+              projectedEarningsUsd: token.balanceUsd * (token.apy / 100),
             },
           },
-        ];
+        }));
         return positions;
       }
     }
