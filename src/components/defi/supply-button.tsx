@@ -18,7 +18,7 @@ import { parseUnits, formatUnits } from "viem";
 import { toast } from "sonner";
 
 interface SupplyButtonProps {
-  protocol: "aave" | "compound";
+  protocol: "aave" | "compound" | "dolomite";
   tokenSymbol: string;
   tokenAddress: string;
   marketAddress: string;
@@ -80,6 +80,22 @@ const COMPOUND_COMET_ABI = [
     outputs: []
   }
 ] as const;
+
+// Dolomite ABI for supply function
+const Dolomite_ABI = [
+  {
+    name: "depositWei",
+    type: "function",
+    inputs:[
+      { name: "_isolationModeMarketId", type: "uint256" },
+      { name: "_toAccountNumber", type: "uint256" },
+      { name:  "_marketId", type: "uint256" },
+      { name: "_amountWei", type: "uint256" },
+      { name: "_eventFlag", type: "uint8" },
+    ],
+    outputs: []
+  }
+]
 
 export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance, tokenDecimals }: SupplyButtonProps) {
   const { address, isConnected, chainId } = useAccount();
@@ -170,6 +186,19 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
           abi: COMPOUND_COMET_ABI,
           functionName: "supply",
           args: [tokenAddress as `0x${string}`, amountWei],
+        });
+      } else if (protocol === "dolomite") {
+        writeContract({
+          address: marketAddress as `0x${string}`,
+          abi: Dolomite_ABI,
+          functionName: "depositWei",
+          args: [
+            BigInt(0), // _isolationModeMarketId
+            BigInt(0), // _toAccountNumber
+            BigInt(0), // _marketId
+            amountWei, // _amountWei
+            0, // _eventFlag
+          ],
         });
       }
 

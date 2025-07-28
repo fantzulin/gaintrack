@@ -7,6 +7,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import { useWalletAssets } from "@/hooks/useWalletAssets";
 import { useCompoundPositions } from "@/hooks/useCompoundPositions";
 import { useAavePositions } from "@/hooks/useAavePositions";
+import { useDolomitePositions } from "@/hooks/useDolomitePositions";
 import { SupplyButton } from "./supply-button";
 import { WithdrawButton } from "./withdraw-button";
 import Image from "next/image";
@@ -58,6 +59,12 @@ const MARKET_ADDRESSES = {
     DAI: "",
     USDCe: "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
   },
+  dolomite: {
+    USDC: "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
+    USDT: "",
+    DAI: "",
+    USDCe: "",
+  }
 } as const;
 
 type Protocol = keyof typeof MARKET_ADDRESSES;
@@ -81,6 +88,7 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
   const { assets, isLoading } = useWalletAssets();
   const { compoundPositions, isLoading: isCompoundPositionsLoading } = useCompoundPositions();
   const { aavePositions, isLoading: isAavePositionsLoading } = useAavePositions();
+  const { dolomitePositions, isLoading: isDolomitePositionsLoading } = useDolomitePositions();
   const [projectedData, setProjectedData] = useState<ProjectedData[]>([]);
 
   // 獲取選中幣種的餘額
@@ -100,6 +108,10 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
       .flatMap((position) => position.position.tokens)
       .find((token) => token.symbol === selectedToken);
     suppliedBalance = suppliedAsset?.supplyBalance || 0;
+  } else if (selectedProtocol === "dolomite") {
+    const suppliedAsset = dolomitePositions
+    .flatMap((position) => position.position.tokens)
+    .find((token) => token.symbol === selectedToken);
   }
 
   useEffect(() => {
@@ -175,7 +187,7 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
                 {selectedProtocol && selectedToken && (
                   <div className="flex space-x-2">
                     <SupplyButton
-                      protocol={selectedProtocol as "aave" | "compound"}
+                      protocol={selectedProtocol as "aave" | "compound" | "dolomite"}
                       tokenSymbol={selectedToken}
                       tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
                       marketAddress={getMarketAddress(selectedProtocol, selectedToken)}

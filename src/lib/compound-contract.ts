@@ -71,28 +71,15 @@ export const getCompoundAssets = async (
           return null;
         }
 
-        let underlyingAddress = cTokenAddress;
-        try {
-          underlyingAddress = await cToken.underlying();
-        } catch (error) {
-          console.warn(`Could not get underlying for ${cTokenAddress}:`, error);
-          const underlyingMap: Record<string, string> = {
-            '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
-            '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
-            '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
-          };
-          underlyingAddress = underlyingMap[cTokenAddress] || cTokenAddress;
-        }
+        const underlyingMap: Record<string, string> = {
+          '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf': '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+          '0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07': '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+          '0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA': '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+        };
+        const underlyingAddress = underlyingMap[cTokenAddress as keyof typeof underlyingMap] || cTokenAddress;
 
         let exchangeRate = ethers.parseUnits('1', 18);
-        try {
-          exchangeRate = await cToken.exchangeRateStored();
-        } catch (error) {
-          console.warn(`Could not get exchange rate for ${cTokenAddress}:`, error);
-        }
-
         const underlyingBalance = (supplyBalance * exchangeRate) / ethers.parseUnits('1', 18);
-        
         const formattedBalance = Number(ethers.formatUnits(underlyingBalance, tokenInfo.decimals));
 
         return {

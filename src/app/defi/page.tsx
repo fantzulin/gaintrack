@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useWalletDeFi } from "@/hooks/useWalletAssets";
 import { useCompoundPositions } from "@/hooks/useCompoundPositions";
+import { useDolomitePositions } from "@/hooks/useDolomitePositions"
 import { useAaveSupplyData } from "@/components/defi/aave-supply";
 import { useCompoundSupplyData } from "@/components/defi/compound-supply";
 import { EarningsPredictor } from "@/components/defi/earnings-predictor";
@@ -29,6 +30,7 @@ export default function DeFiPage() {
   const { isConnected } = useAccount();
   const { defi, isLoading, error } = useWalletDeFi();
   const { compoundPositions, isLoading: isCompoundPositionsLoading, error: compoundPositionsError } = useCompoundPositions();
+  const { dolomitePositions, isLoading: isDolomitePositionsLoading, error: dolomitePositionsError } = useDolomitePositions();
   const { supplyData: aaveData, isLoading: isAaveLoading, error: aaveError } = useAaveSupplyData();
   const { supplyData: compoundData, isLoading: isCompoundLoading, error: compoundError } = useCompoundSupplyData();
   const [mounted, setMounted] = useState(false);
@@ -39,7 +41,7 @@ export default function DeFiPage() {
 
   useEffect(() => {
     setMounted(true);
-  }, [defi, compoundPositions]);
+  }, [defi, compoundPositions, dolomitePositions]);
 
   if (!mounted) {
     return (
@@ -64,7 +66,7 @@ export default function DeFiPage() {
     );
   }
 
-  if (isLoading || isCompoundPositionsLoading || isAaveLoading || isCompoundLoading) {
+  if (isLoading || isCompoundPositionsLoading || isAaveLoading || isCompoundLoading || isDolomitePositionsLoading) {
     return (
       <div className="container mx-auto py-10">
         <div className="text-center">
@@ -74,12 +76,12 @@ export default function DeFiPage() {
     );
   }
 
-  if (aaveError || compoundError || compoundPositionsError) {
+  if (aaveError || compoundError || compoundPositionsError || dolomitePositionsError) {
     return (
       <div className="container mx-auto py-10">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Error</h1>
-          <p className="text-red-500">{aaveError || compoundError || compoundPositionsError}</p>
+          <p className="text-red-500">{aaveError || compoundError || compoundPositionsError || dolomitePositionsError}</p>
         </div>
       </div>
     );
@@ -111,7 +113,7 @@ export default function DeFiPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              [...defi.filter(p => p.protocolId !== 'compound'), ...compoundPositions]
+              [...defi.filter(p => p.protocolId !== 'compound'), ...compoundPositions, ...dolomitePositions]
                 .filter(protocol => protocol.position.balanceUsd > 0.1)
                 .map((protocol, index) => (
                   <TableRow key={index}>
@@ -270,6 +272,10 @@ export default function DeFiPage() {
                 </Card>
               ))}
             </div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Higher APY Protocols</h2>
+              <div className="grid grid-cols-3 gap-4"></div>
           </div>
         </div>
 

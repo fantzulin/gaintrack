@@ -17,6 +17,11 @@ const nextConfig = {
         hostname: 'asset.brandfetch.io',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'icons.llama.fi',
+        pathname: '/**',
+      }
     ],
   },
 
