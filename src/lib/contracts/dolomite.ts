@@ -24,12 +24,12 @@ export const DOLOMITE_MARGIN_ABI = [
     "outputs":[
          {
             "internalType":"uint256[]",
-            "name":"",
+            "name":"marketIds",
             "type":"uint256[]"
          },
          {
             "internalType":"address[]",
-            "name":"",
+            "name":"tokenAddresses",
             "type":"address[]"
          },
          {
@@ -46,7 +46,7 @@ export const DOLOMITE_MARGIN_ABI = [
                }
             ],
             "internalType":"struct Types.Par[]",
-            "name":"",
+            "name":"parBalances",
             "type":"tuple[]"
          },
          {
@@ -63,10 +63,91 @@ export const DOLOMITE_MARGIN_ABI = [
                }
             ],
             "internalType":"struct Types.Wei[]",
-            "name":"",
+            "name":"weiBalances",
             "type":"tuple[]"
          }
       ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getMarketInterestRate",
+    "type": "function",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getMarketTotalPar",
+    "type": "function",
+    "inputs":[
+         {
+            "internalType":"uint256",
+            "name":"marketId",
+            "type":"uint256"
+         }
+      ],
+    "outputs":[
+         {
+            "components":[
+               {
+                  "internalType":"uint128",
+                  "name":"borrow",
+                  "type":"uint128"
+               },
+               {
+                  "internalType":"uint128",
+                  "name":"supply",
+                  "type":"uint128"
+               }
+            ],
+            "internalType":"struct Types.TotalPar",
+            "name":"",
+            "type":"tuple"
+         }
+      ],
+    "stateMutability": "view"
+  },
+  {
+    "name": "getMarketTotalWei",
+    "type": "function",
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "marketId",
+        "type": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "bool",
+            "name": "sign",
+            "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "value",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Types.Wei",
+        "name": "totalWei",
+        "type": "tuple"
+      }
+    ],
     "stateMutability": "view"
   }
 ] as const;
@@ -78,12 +159,14 @@ export const DOLOMITE_TOKENS = [
     address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", //USDC
     symbol: "USDC",
     decimals: 6,
-    logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png'
+    logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png',
+    marketId: 17
   },
   {
     address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", //USDC.e
     symbol: "USDCe",
     decimals: 6,
-    logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png'
+    logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png',
+    marketId: 2
   }
 ];

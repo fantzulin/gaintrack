@@ -24,6 +24,7 @@ import { useCompoundPositions } from "@/hooks/useCompoundPositions";
 import { useDolomitePositions } from "@/hooks/useDolomitePositions"
 import { useAaveSupplyData } from "@/components/defi/aave-supply";
 import { useCompoundSupplyData } from "@/components/defi/compound-supply";
+import { useDolomiteSupplyData } from "@/components/defi/dolomite-supply";
 import { EarningsPredictor } from "@/components/defi/earnings-predictor";
 
 export default function DeFiPage() {
@@ -33,6 +34,7 @@ export default function DeFiPage() {
   const { dolomitePositions, isLoading: isDolomitePositionsLoading, error: dolomitePositionsError } = useDolomitePositions();
   const { supplyData: aaveData, isLoading: isAaveLoading, error: aaveError } = useAaveSupplyData();
   const { supplyData: compoundData, isLoading: isCompoundLoading, error: compoundError } = useCompoundSupplyData();
+  const { supplyData: dolomiteData, isLoading: isDolomiteLoading, error: dolomiteError } = useDolomiteSupplyData();
   const [mounted, setMounted] = useState(false);
   const [selectedAPY, setSelectedAPY] = useState<number>(0);
   const [selectedToken, setSelectedToken] = useState<string>("");
@@ -106,52 +108,51 @@ export default function DeFiPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {defi.length === 0 ? (
+            {[...defi.filter(p => p.protocolId !== 'compound'), ...compoundPositions, ...dolomitePositions]
+              .filter(protocol => protocol.position.balanceUsd > 0.1)
+              .map((protocol, index) => (
+                <TableRow key={index}>
+                  <TableCell className="flex items-center">
+                    <Image 
+                      src={protocol.protocolLogo} 
+                      alt={protocol.protocolName} 
+                      width={20} 
+                      height={20} 
+                      className="rounded-full"
+                    />
+                    <span className="ml-2">{protocol.protocolName}</span>
+                    {protocol.position.tokens?.map((token: any, index: any) => (
+                      <>
+                        {token.tokenType === "supplied" ?
+                          <>
+                            <Image 
+                              src={token.logo} 
+                              alt={token.symbol} 
+                              width={20} 
+                              height={20} 
+                              className="rounded-full ml-2"
+                            />
+                            <span key={index} className="ml-2">{token.symbol}</span>
+                          </>
+                          : ""
+                        }
+                      </>
+                    ))}
+                  </TableCell>
+                  <TableCell>
+                    {protocol.position?.balanceUsd ? `${protocol.position.balanceUsd.toFixed(2)}` : '$0.00'}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {protocol.position?.positionDetails?.apy ? `${protocol.position.positionDetails.apy.toFixed(2)}%` : 'N/A'}
+                  </TableCell>
+                </TableRow>
+              ))}
+            {defi.length === 0 && compoundPositions.length === 0 && dolomitePositions.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8">
                   No DeFi positions found
                 </TableCell>
               </TableRow>
-            ) : (
-              [...defi.filter(p => p.protocolId !== 'compound'), ...compoundPositions, ...dolomitePositions]
-                .filter(protocol => protocol.position.balanceUsd > 0.1)
-                .map((protocol, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="flex items-center">
-                      <Image 
-                        src={protocol.protocolLogo} 
-                        alt={protocol.protocolName} 
-                        width={20} 
-                        height={20} 
-                        className="rounded-full"
-                      />
-                      <span className="ml-2">{protocol.protocolName}</span>
-                      {protocol.position.tokens?.map((token: any, index: any) => (
-                        <>
-                          {token.tokenType === "supplied" ?
-                            <>
-                              <Image 
-                                src={token.logo} 
-                                alt={token.symbol} 
-                                width={20} 
-                                height={20} 
-                                className="rounded-full ml-2"
-                              />
-                              <span key={index} className="ml-2">{token.symbol}</span>
-                            </>
-                            : ""
-                          }
-                        </>
-                      ))}
-                    </TableCell>
-                    <TableCell>
-                      {protocol.position?.balanceUsd ? `$${protocol.position.balanceUsd.toFixed(2)}` : '$0.00'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {protocol.position?.positionDetails?.apy ? `${protocol.position.positionDetails.apy.toFixed(2)}%` : 'N/A'}
-                    </TableCell>
-                  </TableRow>
-                ))
             )}
           </TableBody>
         </Table>
@@ -275,7 +276,65 @@ export default function DeFiPage() {
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-4">Higher APY Protocols</h2>
-              <div className="grid grid-cols-3 gap-4"></div>
+              <div className="grid grid-cols-3 gap-4">
+                {dolomiteData.map((asset, index) => (
+                  <Card 
+                  key={index} 
+                  className={`hover:shadow-lg transition-shadow cursor-pointer ${
+                    selectedToken === asset.symbol && selectedProtocol === 'dolomite' ? 'ring-2 ring-primary' : ''
+                  }`}
+                  onClick={() => {
+                    setSelectedAPY(asset.supplyAPY);
+                    setSelectedToken(asset.symbol);
+                    setSelectedTokenAdress(asset.address);
+                    setSelectedProtocol('dolomite');
+                  }}
+                >
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      <div className="flex items-center">
+                        <Image
+                          src={asset.logo}
+                          alt={asset.symbol}
+                          width={24}
+                          height={24}
+                          className="rounded-full mr-2"
+                        />
+                        {asset.symbol}
+                        <Image
+                          src={asset.protocolLogo}
+                          alt={asset.protocol}
+                          width={24}
+                          height={24}
+                          className="rounded-full ml-2"
+                        />
+                        <span className="text-xs sm:text-sm text-muted-foreground ml-2">
+                          {asset.protocol.toUpperCase()}
+                        </span>
+                      </div>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="grid sm:flex justify-between items-center">
+                        <span className="text-xs sm:text-sm text-muted-foreground">Supply APY</span>
+                        <span className="text-lg font-bold text-green-500">
+                          {asset.supplyAPY.toFixed(2)}%
+                        </span>
+                      </div>
+                      {asset.totalSupply > 0 && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-muted-foreground">TVL</span>
+                          <span className="text-lg font-bold">
+                            ${asset.totalSupply.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+                ))}
+              </div>
           </div>
         </div>
 

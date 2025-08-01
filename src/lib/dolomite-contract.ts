@@ -37,11 +37,10 @@ export interface Par {
   value: bigint;
 }
 
-
-
 export const getDolomiteAssets = async (
   address: `0x${string}`,
-  chainId: number
+  chainId: number,
+  apyMap?: Record<string, number>
 ): Promise<DolomitePosition[]> => {
   try {
     const balances = await readContract(config, {
@@ -53,9 +52,7 @@ export const getDolomiteAssets = async (
 
     if (balances) {
       const receivedMarketIds = balances[0] as readonly BigInt[];
-      console.log("receivedMarketIds", receivedMarketIds)
       const receivedTokenAddresses = balances[1] as readonly `0x${string}`[];
-      console.log("receivedTokenAddresses", receivedTokenAddresses)
       const receivedPars = balances[2] as readonly {
         sign: boolean;
         value: bigint;
@@ -74,26 +71,45 @@ export const getDolomiteAssets = async (
           const balance = parseFloat(formatUnits(wei, tokenInfo.decimals));
 
           if (balance > 0) {
+            let usdValue = 0;
+            
             try {
               const priceData = await getTokenPrice(
                 tokenInfo.address,
                 chainId.toString()
               );
               const usdPrice = priceData?.usdPrice || 0;
-              const usdValue = balance * usdPrice;
+              usdValue = balance * usdPrice;
 
               if (usdValue > 0.1) { // Only add if it has meaningful value
+                  // Get APY from the provided map or use default values
+                  const apy = apyMap?.[tokenInfo.symbol] || 2.0;
+                  
                   tokens.push({
                     tokenType: "supplied",
                     logo: tokenInfo.logo,
                     symbol: tokenInfo.symbol,
                     balance: balance,
                     balanceUsd: usdValue,
-                    apy: 8, // Placeholder APY
+                    apy: apy,
                   });
               }
             } catch (e) {
               console.error(`Error fetching price for ${tokenInfo.symbol}:`, e);
+              
+              // If price fetch fails, still try to add token with default values
+              if (balance > 0) {
+                const apy = apyMap?.[tokenInfo.symbol] || 2.0;
+                
+                tokens.push({
+                  tokenType: "supplied",
+                  logo: tokenInfo.logo,
+                  symbol: tokenInfo.symbol,
+                  balance: balance,
+                  balanceUsd: 0, // No USD value available
+                  apy: apy,
+                });
+              }
             }
           }
         }
