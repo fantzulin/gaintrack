@@ -63,8 +63,14 @@ const MARKET_ADDRESSES = {
     USDC: "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
     USDT: "",
     DAI: "",
-    USDCe: "",
+    USDCe: "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
   }
+} as const;
+
+// dolomite marketId
+const DOLOMITE_MARKET_ID = {
+  USDC: 17,
+  USDCe: 2,
 } as const;
 
 type Protocol = keyof typeof MARKET_ADDRESSES;
@@ -194,6 +200,7 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
                       currentAPY={currentAPY}
                       walletBalance={balance}
                       tokenDecimals={TOKEN_DECIMALS[selectedToken as keyof typeof TOKEN_DECIMALS]}
+                      dolomiteMarketId={DOLOMITE_MARKET_ID[selectedToken as keyof typeof DOLOMITE_MARKET_ID]}
                     />
                     <WithdrawButton
                       protocol={selectedProtocol as "aave" | "compound"}

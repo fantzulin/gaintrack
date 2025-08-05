@@ -25,6 +25,7 @@ interface SupplyButtonProps {
   currentAPY: number;
   walletBalance: number;
   tokenDecimals: number;
+  dolomiteMarketId: number;
 }
 
 // ERC20 ABI for approve function and allowance
@@ -97,7 +98,7 @@ const Dolomite_ABI = [
   }
 ]
 
-export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance, tokenDecimals }: SupplyButtonProps) {
+export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddress, currentAPY, walletBalance, tokenDecimals, dolomiteMarketId }: SupplyButtonProps) {
   const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -193,9 +194,9 @@ export function SupplyButton({ protocol, tokenSymbol, tokenAddress, marketAddres
           abi: Dolomite_ABI,
           functionName: "depositWei",
           args: [
-            BigInt(0), // _isolationModeMarketId
-            BigInt(0), // _toAccountNumber
-            BigInt(0), // _marketId
+            0,
+            0,
+            BigInt(dolomiteMarketId), // _marketId
             amountWei, // _amountWei
             0, // _eventFlag
           ],
