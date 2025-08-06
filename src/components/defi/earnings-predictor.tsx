@@ -203,12 +203,13 @@ export function EarningsPredictor({ currentAPY, selectedToken, selectedTokenAddr
                       dolomiteMarketId={DOLOMITE_MARKET_ID[selectedToken as keyof typeof DOLOMITE_MARKET_ID]}
                     />
                     <WithdrawButton
-                      protocol={selectedProtocol as "aave" | "compound"}
+                      protocol={selectedProtocol as "aave" | "compound" | "dolomite"}
                       tokenSymbol={selectedToken}
                       tokenAddress={TOKEN_ADDRESSES[selectedToken as keyof typeof TOKEN_ADDRESSES]}
                       marketAddress={getMarketAddress(selectedProtocol, selectedToken)}
                       suppliedBalance={suppliedBalance}
                       tokenDecimals={TOKEN_DECIMALS[selectedToken as keyof typeof TOKEN_DECIMALS]}
+                      dolomiteMarketId={DOLOMITE_MARKET_ID[selectedToken as keyof typeof DOLOMITE_MARKET_ID]}
                     />
                   </div>
                 )}

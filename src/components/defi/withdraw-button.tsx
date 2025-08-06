@@ -18,12 +18,13 @@ import { parseUnits, formatUnits } from "viem";
 import { toast } from "sonner";
 
 interface WithdrawButtonProps {
-  protocol: "aave" | "compound";
+  protocol: "aave" | "compound" | "dolomite";
   tokenSymbol: string;
   tokenAddress: string;
   marketAddress: string;
   suppliedBalance: number;
   tokenDecimals: number;
+  dolomiteMarketId: number;
 }
 
 // Aave V3 Pool ABI for withdraw function
@@ -81,6 +82,43 @@ const COMPOUND_COMET_ABI = [
   }
 ] as const;
 
+// Dolomite ABI for withdraw function
+const Dolomite_ABI = [
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_isolationModeMarketId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_fromAccountNumber",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_marketId",
+        "type": "uint256"
+      },
+      { 
+        "internalType": "uint256",
+        "name": "_amountWei",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint8",
+        "name": "_balanceCheckFlag",
+        "type": "uint8"
+      }
+    ],
+    "name": "withdrawWei",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+] as const;
+
 // ERC20 ABI for decimals function
 const ERC20_DECIMALS_ABI = [
   {
@@ -99,7 +137,7 @@ const ERC20_DECIMALS_ABI = [
   }
 ] as const;
 
-export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddress, suppliedBalance, tokenDecimals }: WithdrawButtonProps) {
+export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddress, suppliedBalance, tokenDecimals, dolomiteMarketId }: WithdrawButtonProps) {
   const { address, isConnected, chainId } = useAccount();
   const [amount, setAmount] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -155,12 +193,19 @@ export function WithdrawButton({ protocol, tokenSymbol, tokenAddress, marketAddr
           functionName: "withdraw",
           args: [tokenAddress as `0x${string}`, amountWei, address as `0x${string}`],
         })
-      : (protocol === "compound") 
+      : (protocol === "compound") ?
         writeContract({
           address: marketAddress as `0x${string}`,
           abi: COMPOUND_COMET_ABI,
           functionName: "withdraw",
           args: [tokenAddress as `0x${string}`, amountWei],
+        })
+      : (protocol === "dolomite")
+        writeContract({
+          address: marketAddress as `0x${string}`,
+          abi: Dolomite_ABI,
+          functionName: "withdrawWei",
+          args: [BigInt(0), BigInt(0), BigInt(dolomiteMarketId), amountWei, Number(1)],
         });
 
       toast.success(`Withdraw ${amount} ${tokenSymbol} from ${protocol.toUpperCase()} initiated!`);
