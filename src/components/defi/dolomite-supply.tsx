@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { ARBITRUM_TOKENS } from "@/lib/tokens";
 
 /**
  * Dolomite APY Data Functions and Hook
@@ -21,20 +22,24 @@ export interface DolomiteSupply {
 }
 
 // Dolomite assets configuration with DefiLlama pool IDs
-const assets = [
-    {
-        symbol: "USDCe",
-        logo: "https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png",
-        address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-        poolId: "6f007481-cd58-4b32-bac3-1ce9f19a3a07",
-    },
-    {
-        symbol: "USDC",
-        logo: "https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png",
-        address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
-        poolId: "d0e11625-79b9-40e3-b01f-a473af961995",
+const assets = ARBITRUM_TOKENS.filter(token => 
+    ["USDC.e", "USDT", "USDC"].includes(token.symbol)
+).map(token => {
+    let poolId = "";
+    if (token.symbol === "USDC.e") {
+        poolId = "6f007481-cd58-4b32-bac3-1ce9f19a3a07";
+    } else if (token.symbol === "USDT") {
+        poolId = "d8f76f0a-1649-4212-a96f-c09dd1fd9bb4";
+    } else if (token.symbol === "USDC") {
+        poolId = "d0e11625-79b9-40e3-b01f-a473af961995";
     }
-];
+    return {
+        symbol: token.symbol,
+        logo: token.logoURI,
+        address: token.address,
+        poolId: poolId,
+    };
+});
 
 /**
  * React Hook for Dolomite Supply Data
@@ -103,6 +108,7 @@ export function useDolomiteSupplyData() {
                                 const defaultApyMap: Record<string, number> = {
                                     'USDC': 2.5,  // Current market rates for stablecoins
                                     'USDCe': 2.3,
+                                    'USDT': 2.4, // Default APY for USDT
                                 };
                                 
                                 const defaultApy = defaultApyMap[asset.symbol] || 2.0;
