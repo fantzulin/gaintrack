@@ -22,17 +22,17 @@ const COMET_ABI = [
 
 // Compound V3 Market addresses on Arbitrum
 const MARKETS = {
-  USDCe:"0xa5edbdd9646f8dff606d7448e414884c7d905dca",
+  "USDC.e":"0xa5edbdd9646f8dff606d7448e414884c7d905dca",
   USDT: "0xd98Be00b5D27fc98112BdE293e487f8D4cA57d07",
   USDC: "0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf",
 };
 
 const assets = [
   {
-    symbol: "USDCe",
+    symbol: "USDC.e",
     logo: "https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png",
     address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-    marketAddress: MARKETS.USDCe,
+    marketAddress: MARKETS["USDC.e"],
   },
   {
     symbol: "USDT",

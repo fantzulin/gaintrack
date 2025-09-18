@@ -107,7 +107,7 @@ export function useDolomiteSupplyData() {
                             if (supplyAPY === 2.0) {
                                 const defaultApyMap: Record<string, number> = {
                                     'USDC': 2.5,  // Current market rates for stablecoins
-                                    'USDCe': 2.3,
+                                    'USDC.e': 2.3,
                                     'USDT': 2.4, // Default APY for USDT
                                 };
                                 

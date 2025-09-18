@@ -28,7 +28,7 @@ const STABLE_COINS = [
   { symbol: "USDC", color: "#2775CA" },
   { symbol: "USDT", color: "#26A17B" },
   { symbol: "DAI", color: "#F5AC37" },
-  { symbol: "USDCe", color: "#2775CA" },
+  { symbol: "USDC.e", color: "#2775CA" },
 ];
 
 // Token addresses and market addresses
@@ -36,14 +36,14 @@ const TOKEN_ADDRESSES = {
   USDC: "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
   USDT: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
   DAI: "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-  USDCe: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
+  "USDC.e": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
 } as const;
 
 const TOKEN_DECIMALS = {
   USDC: 6,
   USDT: 6,
   DAI: 18,
-  USDCe: 6,
+  "USDC.e": 6,
 } as const;
 
 const MARKET_ADDRESSES = {
@@ -51,26 +51,26 @@ const MARKET_ADDRESSES = {
     USDC: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
     USDT: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
     DAI: "0x794a61358d6845594f94dc1db02a252b5b4814ad",
-    USDCe: "",
+    "USDC.e": "",
   },
   compound: {
     USDC: "0x9c4ec768c28520b50860ea7a15bd7213a9ff58bf",
     USDT: "0xd98be00b5d27fc98112bde293e487f8d4ca57d07",
     DAI: "",
-    USDCe: "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
+    "USDC.e": "0xA5EDBDD9646f8dFF606d7448e414884C7d905dCA",
   },
   dolomite: {
     USDC: "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
     USDT: "",
     DAI: "",
-    USDCe: "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
+    "USDC.e": "0xf8b2c637A68cF6A17b1DF9F8992EeBeFf63d2dFf",
   }
 } as const;
 
 // dolomite marketId
 const DOLOMITE_MARKET_ID = {
   USDC: 17,
-  USDCe: 2,
+  "USDC.e": 2,
 } as const;
 
 type Protocol = keyof typeof MARKET_ADDRESSES;

@@ -164,7 +164,7 @@ export const DOLOMITE_TOKENS = [
   },
   {
     address: "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8", //USDC.e
-    symbol: "USDCe",
+    symbol: "USDC.e",
     decimals: 6,
     logo: 'https://logo.moralis.io/0xa4b1_0xaf88d065e77c8cc2239327c5edb3a432268e5831_01a431622b9a9ca34308038f8d54751b.png',
     marketId: 2
