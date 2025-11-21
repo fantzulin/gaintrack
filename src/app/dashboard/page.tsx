@@ -26,17 +26,6 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
-  // 在客戶端渲染之前，顯示一個加載狀態
-  if (!mounted) {
-    return (
-      <div className="container mx-auto py-10">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
-        </div>
-      </div>
-    );
-  }
-
   if (!isConnected) {
     return (
       <div className="container mx-auto py-10">
@@ -50,12 +39,31 @@ export default function DashboardPage() {
     );
   }
 
-  if (walletLoading || sheetLoading) {
+  // merge mounted and loading state, show skeleton screen
+  if (!mounted || walletLoading || sheetLoading) {
     return (
       <div className="container mx-auto py-10">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading Assets...</h1>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Token</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Cost Price</TableHead>
+              <TableHead className="text-right">USD Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 3 }).map((_, rowIndex) => (
+              <TableRow key={rowIndex}>
+                {Array.from({ length: 4 }).map((_, cellIndex) => (
+                  <TableCell key={cellIndex} className="text-center py-8">
+                    <div className="w-full h-2 rounded bg-gray-200 animate-pulse"></div>
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }
@@ -66,11 +74,6 @@ export default function DashboardPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Error</h1>
           <p className="text-red-500">{walletError || sheetError}</p>
-          {/* 調試信息 */}
-          <div className="mt-4 text-sm text-gray-600">
-            <p>Sheet Assets: {JSON.stringify(sheetAssets)}</p>
-            <p>Wallet Assets Count: {walletAssets?.length || 0}</p>
-          </div>
         </div>
       </div>
     );
@@ -91,7 +94,7 @@ export default function DashboardPage() {
     );
     return {
       ...asset,
-      costPrice: sheetAsset?.costPrice || "0"
+      costPrice: sheetAsset?.costPrice ? Number(sheetAsset.costPrice) : 0
     };
   });
 
